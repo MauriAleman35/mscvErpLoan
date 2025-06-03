@@ -1,0 +1,22 @@
+{
+  "generator-jhipster": {
+    "applicationType": "microservice",
+    "authenticationType": "jwt",
+    "baseName": "erp",
+    "buildTool": "maven",
+    "clientFramework": "none",
+    "devDatabaseType": "postgresql",
+    "enableHibernateCache": true,
+    "enableSwaggerCodegen": false,
+    "entities": ["Role", "User", "Document", "SubscriptionPlan", "UserSubscription", "Solicitude", "Offer", "Loan", "MonthlyPayment"],
+    "jhipsterVersion": "8.11.0",
+    "jwtSecretKey": "YzM0ODM4ZGM3OWFmMzA3M2NiODNhYmVkNmFlYzJiYzFiMzk0ODY3ZGE5NDAxYTY0Mzk1YzUxZmQwNWJjNDY1NjU1ZDJiNDg2MWVkNzJkNTljOTMyMDE0MmE0OTgyZjAxNWE1MWNjYmU5ZmE5ZTExMDYwNGUzNTBjODI2YmZiOWM=",
+    "languages": ["en"],
+    "lastLiquibaseTimestamp": 1748984427000,
+    "nativeLanguage": "en",
+    "packageName": "com.miempresa.erp",
+    "prodDatabaseType": "postgresql",
+    "skipClient": true,
+    "skipUserManagement": true
+  }
+}

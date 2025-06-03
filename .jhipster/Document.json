@@ -1,0 +1,36 @@
+{
+  "annotations": {
+    "changelogDate": "20250603205427"
+  },
+  "applications": ["erp"],
+  "clientRootFolder": "erp",
+  "databaseType": "sql",
+  "fields": [
+    {
+      "fieldName": "urlFile",
+      "fieldType": "String",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "uploadDate",
+      "fieldType": "Instant",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "verified",
+      "fieldType": "Boolean",
+      "fieldValidateRules": ["required"]
+    }
+  ],
+  "microserviceName": "erp",
+  "name": "Document",
+  "relationships": [
+    {
+      "otherEntityName": "user",
+      "relationshipName": "user",
+      "relationshipSide": "left",
+      "relationshipType": "many-to-one"
+    }
+  ],
+  "searchEngine": "no"
+}

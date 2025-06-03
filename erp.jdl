@@ -1,0 +1,235 @@
+/*
+  JDL para generar un microservicio JHipster “erp” (REST + JWT + PostgreSQL).
+  - applicationType: microservice
+  - authenticationType: jwt
+  - dev/prod DB: postgresql
+  - No cliente UI
+  - Cache Hibernate
+  - Entidades: Role, User, Document, SubscriptionPlan, UserSubscription,
+               Solicitude, Offer, Loan, MonthlyPayment
+  - Relaciones ManyToOne y ManyToMany según tu diagrama
+*/
+
+application {
+  config {
+    // ---------------------------------------------------
+    //  Nombre y paquete base
+    // ---------------------------------------------------
+    baseName erp
+    packageName com.miempresa.erp
+
+    // ---------------------------------------------------
+    //  Tipo: Microservicio
+    // ---------------------------------------------------
+    applicationType microservice
+
+    // ---------------------------------------------------
+    //  Autenticación: JWT
+    // ---------------------------------------------------
+    authenticationType jwt
+
+    // ---------------------------------------------------
+    //  Bases de datos (PostgreSQL)
+    //  - Dev: tu Postgres local
+    //  - Prod: PostgreSQL
+    // ---------------------------------------------------
+    devDatabaseType postgresql
+    prodDatabaseType postgresql
+
+    // ---------------------------------------------------
+    //  Hibernate Cache
+    // ---------------------------------------------------
+    enableHibernateCache true
+
+    // ---------------------------------------------------
+    //  Build tool Maven
+    // ---------------------------------------------------
+    buildTool maven
+
+    // ---------------------------------------------------
+    //  No generamos cliente UI (solo backend)
+    // ---------------------------------------------------
+    clientFramework none
+    skipClient true
+
+    // ---------------------------------------------------
+    //  No habilitamos GraphQL desde el JDL (lo agregarás a mano)
+    // ---------------------------------------------------
+    // enableGraphql true   ← eliminado a propósito
+
+    // ---------------------------------------------------
+    //  No habilitamos Swagger Codegen
+    // ---------------------------------------------------
+    enableSwaggerCodegen false
+  }
+
+  // ---------------------------------------------------
+  //  Entidades del microservicio ERP
+  // ---------------------------------------------------
+  entities Role, User, Document, SubscriptionPlan, UserSubscription, Solicitude, Offer, Loan, MonthlyPayment
+}
+
+//
+// Definición de entidades
+//
+
+// --------------------------------------------------
+// 0. Role (para controlar ADMIN vs CLIENTE)
+// --------------------------------------------------
+entity Role {
+  name String required
+}
+
+// --------------------------------------------------
+// 1. Usuario (entidad propia, no la de JHipster por defecto)
+// --------------------------------------------------
+entity User {
+  name             String      required,
+  lastName         String      required,
+  email            String      required,
+  phone            String      required,
+  ci               String      required,
+  password         String      required,
+  score            Integer     required,
+  status           String      required,
+  userType         String      required,
+  addressVerified  Boolean     required,
+  identityVerified Boolean     required
+}
+
+// --------------------------------------------------
+// 2. Documento
+// --------------------------------------------------
+entity Document {
+  urlFile    String       required,
+  uploadDate Instant      required,
+  verified   Boolean      required
+}
+
+// --------------------------------------------------
+// 3. Plan de Suscripción (SubscriptionPlan)
+// --------------------------------------------------
+entity SubscriptionPlan {
+  name         String      required,
+  description  String      required,
+  monthlyPrice BigDecimal  required,
+  annualPrice  BigDecimal  required,
+  status       String      required
+}
+
+// --------------------------------------------------
+// 4. Suscripción de Usuario (UserSubscription)
+// --------------------------------------------------
+entity UserSubscription {
+  startDate Instant      required,
+  endDate   Instant      required,
+  status    String       required
+}
+
+// --------------------------------------------------
+// 5. Solicitud de Préstamo (Solicitude)
+// --------------------------------------------------
+entity Solicitude {
+  loanAmount BigDecimal  required,
+  status     String      required,
+  createdAt  Instant     required
+}
+
+// --------------------------------------------------
+// 6. Oferta (Offer)
+// --------------------------------------------------
+entity Offer {
+  partnerId            Integer      required,
+  interest             BigDecimal   required,
+  loanTerm             Integer      required,
+  monthlyPayment       BigDecimal   required,
+  totalRepaymentAmount BigDecimal   required,
+  status               String       required,
+  createdAt            Instant      required
+}
+
+// --------------------------------------------------
+// 7. Préstamo (Loan)
+// --------------------------------------------------
+entity Loan {
+  loanAmount       BigDecimal  required,
+  startDate        Instant     required,
+  endDate          Instant     required,
+  hashBlockchain   String      required,
+  currentStatus    String      required,
+  latePaymentCount Integer     required,
+  lastStatusUpdate Instant     required
+}
+
+// --------------------------------------------------
+// 8. Pago Mensual (MonthlyPayment)
+// --------------------------------------------------
+entity MonthlyPayment {
+  dueDate         Instant     required,
+  paymentDate     Instant     required,
+  borrowVerified  Boolean     required,
+  partnerVerified Boolean     required,
+  comprobantFile  String      required,
+  daysLate        Integer     required,
+  penaltyAmount   BigDecimal  required,
+  paymentStatus   String      required
+}
+
+//
+// Relaciones entre entidades
+//
+relationship ManyToOne {
+  // Un Documento pertenece a un solo Usuario
+  Document{user} to User,
+
+  // Una Suscripción de Usuario pertenece a un Usuario
+  UserSubscription{user} to User,
+
+  // Una Suscripción de Usuario está relacionada con un Plan de Suscripción
+  UserSubscription{subscriptionPlan} to SubscriptionPlan,
+
+  // Una Solicitud de Préstamo está hecha por un Usuario (borrower)
+  Solicitude{borrower} to User,
+
+  // Una Oferta está vinculada a una Solicitud de Préstamo
+  Offer{solicitude} to Solicitude,
+
+  // Un Préstamo está vinculado a una Oferta
+  Loan{offer} to Offer,
+
+  // Un Pago Mensual pertenece a un Préstamo
+  MonthlyPayment{loan} to Loan
+}
+
+relationship ManyToMany {
+  // Un Rol puede asignarse a muchos Usuarios, y un Usuario puede tener varios Roles
+  User{roles} to Role{users}
+}
+
+//
+// (Opcional) Configuración Docker Compose para este microservicio “erp”
+// Si más adelante quieres levantarlo en Docker con Postgres, Redis, etc.,
+// descomenta la sección de deployment que sigue.
+//
+//deployment {
+//  dockerCompose {
+//    imageName erp-backend
+//    imageTag latest
+//    applicationPort 8080
+//    services {
+//      postgresql {
+//        image: postgres:17.4
+//        containerName: erp-postgresql
+//        environment: {
+//          POSTGRES_USER: erp
+//          POSTGRES_PASSWORD: erp
+//          POSTGRES_DB: erp
+//        }
+//        ports: 5432
+//        volumes: erp_db_data:/var/lib/postgresql/data
+//        healthCheck: "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"
+//      }
+//      // Si deseas agregar Redis o Hazelcast, decláralo aquí.
+//    }
+//  }
+//}
