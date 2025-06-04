@@ -76,9 +76,6 @@ application {
 // --------------------------------------------------
 // 0. Role (para controlar ADMIN vs CLIENTE)
 // --------------------------------------------------
-entity Role {
-  name String required
-}
 
 // --------------------------------------------------
 // 1. Usuario (entidad propia, no la de JHipster por defecto)

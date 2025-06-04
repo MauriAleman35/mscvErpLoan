@@ -59,6 +59,7 @@ public class MonthlyPayment implements Serializable {
     private String paymentStatus;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_loan")
     @JsonIgnoreProperties(value = { "offer" }, allowSetters = true)
     private Loan loan;
 

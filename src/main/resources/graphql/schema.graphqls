@@ -1,0 +1,303 @@
+# Schema GraphQL para sistema ERP de préstamos
+
+scalar Date
+scalar DateTime
+scalar BigDecimal
+
+# Tipos principales
+type Loan {
+  id: ID!
+  loanAmount: BigDecimal!
+  startDate: DateTime
+  endDate: DateTime
+  hashBlockchain: String
+  currentStatus: String
+  latePaymentCount: Int
+  lastStatusUpdate: DateTime
+  offer: Offer
+  monthlyPayments: [MonthlyPayment]
+}
+
+type Offer {
+  id: ID!
+  partnerId: Int
+  interest: BigDecimal
+  loanTerm: Int
+  monthlyPayment: BigDecimal
+  totalRepaymentAmount: BigDecimal
+  status: String
+  createdAt: DateTime
+  solicitude: Solicitude
+  loan: Loan
+}
+
+type Solicitude {
+  id: ID!
+  loanAmount: BigDecimal!
+  status: String
+  createdAt: DateTime
+  borrower: JhiUser
+  offers: [Offer]
+}
+
+type JhiUser {
+  id: ID!
+  name: String
+  lastName: String
+  email: String
+  phone: String
+  ci: String
+  score: Int
+  status: String
+  userType: String
+  adressVerified: Boolean
+  identityVerified: Boolean
+  documents: [Document]
+  solicitudes: [Solicitude]
+  subscriptions: [UserSubscription]
+}
+
+type Document {
+  id: ID!
+  urlFile: String
+  uploadDate: DateTime
+  verified: Boolean
+  user: JhiUser
+}
+
+type MonthlyPayment {
+  id: ID!
+  dueDate: DateTime
+  paymentDate: DateTime
+  borrowVerified: Boolean
+  partnerVerified: Boolean
+  comprobantFile: String
+  daysLate: Int
+  penaltyAmount: BigDecimal
+  paymentStatus: String
+  loan: Loan
+}
+
+type UserSubscription {
+  id: ID!
+  startDate: DateTime
+  endDate: DateTime
+  status: String
+  user: JhiUser
+  subscriptionPlan: SubscriptionPlan
+}
+
+type SubscriptionPlan {
+  id: ID!
+  name: String
+  description: String
+  monthlyPrice: BigDecimal
+  annualPrice: BigDecimal
+  status: String
+  userSubscriptions: [UserSubscription]
+}
+
+# Inputs para creación y actualización
+
+input LoanInput {
+  loanAmount: BigDecimal!
+  startDate: DateTime
+  endDate: DateTime
+  hashBlockchain: String
+  currentStatus: String
+  latePaymentCount: Int
+  lastStatusUpdate: DateTime
+  offerId: ID
+}
+
+input OfferInput {
+  partnerId: Int
+  interest: BigDecimal
+  loanTerm: Int
+  monthlyPayment: BigDecimal
+  totalRepaymentAmount: BigDecimal
+  status: String
+  solicitudeId: ID
+}
+
+input SolicitudeInput {
+  loanAmount: BigDecimal!
+  status: String
+  borrowerId: ID
+}
+
+input JhiUserInput {
+  name: String
+  lastName: String
+  email: String
+  phone: String
+  ci: String
+  password: String
+  score: Int
+  status: String
+  userType: String
+  adressVerified: Boolean
+  identityVerified: Boolean
+}
+
+input DocumentInput {
+  urlFile: String
+  uploadDate: DateTime
+  verified: Boolean
+  userId: ID
+}
+
+input MonthlyPaymentInput {
+  dueDate: DateTime
+  paymentDate: DateTime
+  borrowVerified: Boolean
+  partnerVerified: Boolean
+  comprobantFile: String
+  daysLate: Int
+  penaltyAmount: BigDecimal
+  paymentStatus: String
+  loanId: ID
+}
+
+input UserSubscriptionInput {
+  startDate: DateTime
+  endDate: DateTime
+  status: String
+  userId: ID
+  subscriptionPlanId: ID
+}
+
+input SubscriptionPlanInput {
+  name: String
+  description: String
+  monthlyPrice: BigDecimal
+  annualPrice: BigDecimal
+  status: String
+}
+
+# Filtros para consultas
+input LoanFilter {
+  id: ID
+  currentStatus: String
+  startDateFrom: DateTime
+  startDateTo: DateTime
+  minAmount: BigDecimal
+  maxAmount: BigDecimal
+}
+
+input OfferFilter {
+  id: ID
+  status: String
+  partnerId: Int
+  solicitudeId: ID
+}
+
+input SolicitudeFilter {
+  id: ID
+  status: String
+  borrowerId: ID
+  minAmount: BigDecimal
+  maxAmount: BigDecimal
+}
+
+input UserFilter {
+  id: ID
+  email: String
+  userType: String
+  status: String
+}
+
+# Queries
+type Query {
+  # Loan queries
+  loan(id: ID!): Loan
+  loans(filter: LoanFilter, page: Int, size: Int): [Loan]
+  loanCount(filter: LoanFilter): Int
+
+  # Offer queries
+  offer(id: ID!): Offer
+  offers(filter: OfferFilter, page: Int, size: Int): [Offer]
+  offerCount(filter: OfferFilter): Int
+
+  # Solicitude queries
+  solicitude(id: ID!): Solicitude
+  solicitudes(filter: SolicitudeFilter, page: Int, size: Int): [Solicitude]
+  solicitudeCount(filter: SolicitudeFilter): Int
+
+  # JhiUser queries
+  user(id: ID!): JhiUser
+  userByEmail(email: String!): JhiUser
+  users(filter: UserFilter, page: Int, size: Int): [JhiUser]
+  userCount(filter: UserFilter): Int
+
+  # Document queries
+  document(id: ID!): Document
+  documentsByUser(userId: ID!): [Document]
+
+  # MonthlyPayment queries
+  monthlyPayment(id: ID!): MonthlyPayment
+  monthlyPaymentsByLoan(loanId: ID!): [MonthlyPayment]
+
+  # UserSubscription queries
+  userSubscription(id: ID!): UserSubscription
+  userSubscriptionsByUser(userId: ID!): [UserSubscription]
+  activeUserSubscriptions: [UserSubscription]
+
+  # SubscriptionPlan queries
+  subscriptionPlan(id: ID!): SubscriptionPlan
+  subscriptionPlans(status: String): [SubscriptionPlan]
+  activeSubscriptionPlans: [SubscriptionPlan]
+}
+
+# Mutations
+type Mutation {
+  # Loan mutations
+  createLoan(input: LoanInput!): Loan
+  updateLoan(id: ID!, input: LoanInput!): Loan
+  deleteLoan(id: ID!): Boolean
+
+  # Offer mutations
+  createOffer(input: OfferInput!): Offer
+  updateOffer(id: ID!, input: OfferInput!): Offer
+  deleteOffer(id: ID!): Boolean
+  acceptOffer(id: ID!): Loan
+
+  # Solicitude mutations
+  createSolicitude(input: SolicitudeInput!): Solicitude
+  updateSolicitude(id: ID!, input: SolicitudeInput!): Solicitude
+  deleteSolicitude(id: ID!): Boolean
+
+  # JhiUser mutations
+  createUser(input: JhiUserInput!): JhiUser
+  updateUser(id: ID!, input: JhiUserInput!): JhiUser
+  deleteUser(id: ID!): Boolean
+  verifyUserIdentity(id: ID!, verified: Boolean!): JhiUser
+  verifyUserAddress(id: ID!, verified: Boolean!): JhiUser
+
+  # Document mutations
+  createDocument(input: DocumentInput!): Document
+  updateDocument(id: ID!, input: DocumentInput!): Document
+  deleteDocument(id: ID!): Boolean
+  verifyDocument(id: ID!, verified: Boolean!): Document
+
+  # MonthlyPayment mutations
+  createMonthlyPayment(input: MonthlyPaymentInput!): MonthlyPayment
+  updateMonthlyPayment(id: ID!, input: MonthlyPaymentInput!): MonthlyPayment
+  deleteMonthlyPayment(id: ID!): Boolean
+  verifyBorrowerPayment(id: ID!, verified: Boolean!): MonthlyPayment
+  verifyPartnerPayment(id: ID!, verified: Boolean!): MonthlyPayment
+
+  # UserSubscription mutations
+  createUserSubscription(input: UserSubscriptionInput!): UserSubscription
+  updateUserSubscription(id: ID!, input: UserSubscriptionInput!): UserSubscription
+  deleteUserSubscription(id: ID!): Boolean
+  activateUserSubscription(id: ID!): UserSubscription
+  cancelUserSubscription(id: ID!): UserSubscription
+
+  # SubscriptionPlan mutations
+  createSubscriptionPlan(input: SubscriptionPlanInput!): SubscriptionPlan
+  updateSubscriptionPlan(id: ID!, input: SubscriptionPlanInput!): SubscriptionPlan
+  deleteSubscriptionPlan(id: ID!): Boolean
+  activateSubscriptionPlan(id: ID!): SubscriptionPlan
+  deactivateSubscriptionPlan(id: ID!): SubscriptionPlan
+}

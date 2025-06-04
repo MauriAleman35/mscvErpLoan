@@ -115,7 +115,7 @@ class UserResourceIT {
             .score(DEFAULT_SCORE)
             .status(DEFAULT_STATUS)
             .userType(DEFAULT_USER_TYPE)
-            .addressVerified(DEFAULT_ADDRESS_VERIFIED)
+            .adressVerified(DEFAULT_ADDRESS_VERIFIED)
             .identityVerified(DEFAULT_IDENTITY_VERIFIED);
     }
 
@@ -136,7 +136,7 @@ class UserResourceIT {
             .score(UPDATED_SCORE)
             .status(UPDATED_STATUS)
             .userType(UPDATED_USER_TYPE)
-            .addressVerified(UPDATED_ADDRESS_VERIFIED)
+            .adressVerified(UPDATED_ADDRESS_VERIFIED)
             .identityVerified(UPDATED_IDENTITY_VERIFIED);
     }
 
@@ -395,17 +395,11 @@ class UserResourceIT {
 
     @SuppressWarnings({ "unchecked" })
     void getAllUsersWithEagerRelationshipsIsEnabled() throws Exception {
-        when(userRepositoryMock.findAllWithEagerRelationships(any())).thenReturn(new PageImpl(new ArrayList<>()));
-
         restUserMockMvc.perform(get(ENTITY_API_URL + "?eagerload=true")).andExpect(status().isOk());
-
-        verify(userRepositoryMock, times(1)).findAllWithEagerRelationships(any());
     }
 
     @SuppressWarnings({ "unchecked" })
     void getAllUsersWithEagerRelationshipsIsNotEnabled() throws Exception {
-        when(userRepositoryMock.findAllWithEagerRelationships(any())).thenReturn(new PageImpl(new ArrayList<>()));
-
         restUserMockMvc.perform(get(ENTITY_API_URL + "?eagerload=false")).andExpect(status().isOk());
         verify(userRepositoryMock, times(1)).findAll(any(Pageable.class));
     }
@@ -464,7 +458,7 @@ class UserResourceIT {
             .score(UPDATED_SCORE)
             .status(UPDATED_STATUS)
             .userType(UPDATED_USER_TYPE)
-            .addressVerified(UPDATED_ADDRESS_VERIFIED)
+            .adressVerified(UPDATED_ADDRESS_VERIFIED)
             .identityVerified(UPDATED_IDENTITY_VERIFIED);
 
         restUserMockMvc
@@ -546,7 +540,7 @@ class UserResourceIT {
             .lastName(UPDATED_LAST_NAME)
             .ci(UPDATED_CI)
             .score(UPDATED_SCORE)
-            .addressVerified(UPDATED_ADDRESS_VERIFIED)
+            .adressVerified(UPDATED_ADDRESS_VERIFIED)
             .identityVerified(UPDATED_IDENTITY_VERIFIED);
 
         restUserMockMvc
@@ -585,7 +579,7 @@ class UserResourceIT {
             .score(UPDATED_SCORE)
             .status(UPDATED_STATUS)
             .userType(UPDATED_USER_TYPE)
-            .addressVerified(UPDATED_ADDRESS_VERIFIED)
+            .adressVerified(UPDATED_ADDRESS_VERIFIED)
             .identityVerified(UPDATED_IDENTITY_VERIFIED);
 
         restUserMockMvc

@@ -1,0 +1,19 @@
+package com.miempresa.erp.config;
+
+import graphql.scalars.ExtendedScalars;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.graphql.execution.RuntimeWiringConfigurer;
+
+@Configuration
+public class GraphQlConfig {
+
+    @Bean
+    public RuntimeWiringConfigurer runtimeWiringConfigurer() {
+        return builder -> {
+            builder.scalar(ExtendedScalars.Date);
+            builder.scalar(ExtendedScalars.DateTime);
+            builder.scalar(ExtendedScalars.GraphQLBigDecimal);
+        };
+    }
+}

@@ -56,7 +56,7 @@ public class UserAsserts {
             .satisfies(a -> assertThat(a.getScore()).as("check score").isEqualTo(expected.getScore()))
             .satisfies(a -> assertThat(a.getStatus()).as("check status").isEqualTo(expected.getStatus()))
             .satisfies(a -> assertThat(a.getUserType()).as("check userType").isEqualTo(expected.getUserType()))
-            .satisfies(a -> assertThat(a.getAddressVerified()).as("check addressVerified").isEqualTo(expected.getAddressVerified()))
+            .satisfies(a -> assertThat(a.getAdressVerified()).as("check addressVerified").isEqualTo(expected.getAdressVerified()))
             .satisfies(a -> assertThat(a.getIdentityVerified()).as("check identityVerified").isEqualTo(expected.getIdentityVerified()));
     }
 

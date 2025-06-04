@@ -55,6 +55,7 @@ public class Loan implements Serializable {
     private Instant lastStatusUpdate;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_offer")
     @JsonIgnoreProperties(value = { "solicitude" }, allowSetters = true)
     private Offer offer;
 

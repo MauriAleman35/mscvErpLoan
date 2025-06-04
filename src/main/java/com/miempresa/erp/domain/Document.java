@@ -38,6 +38,7 @@ public class Document implements Serializable {
     private Boolean verified;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
     @JsonIgnoreProperties(value = { "roles" }, allowSetters = true)
     private User user;
 

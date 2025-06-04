@@ -63,8 +63,8 @@ public class User implements Serializable {
     private String userType;
 
     @NotNull
-    @Column(name = "address_verified", nullable = false)
-    private Boolean addressVerified;
+    @Column(name = "adress_verified", nullable = false)
+    private Boolean adressVerified;
 
     @NotNull
     @Column(name = "identity_verified", nullable = false)
@@ -212,17 +212,17 @@ public class User implements Serializable {
         this.userType = userType;
     }
 
-    public Boolean getAddressVerified() {
-        return this.addressVerified;
+    public Boolean getAdressVerified() {
+        return this.adressVerified;
     }
 
-    public User addressVerified(Boolean addressVerified) {
+    public User adressVerified(Boolean addressVerified) {
         this.setAddressVerified(addressVerified);
         return this;
     }
 
     public void setAddressVerified(Boolean addressVerified) {
-        this.addressVerified = addressVerified;
+        this.adressVerified = addressVerified;
     }
 
     public Boolean getIdentityVerified() {
@@ -294,7 +294,7 @@ public class User implements Serializable {
             ", score=" + getScore() +
             ", status='" + getStatus() + "'" +
             ", userType='" + getUserType() + "'" +
-            ", addressVerified='" + getAddressVerified() + "'" +
+            ", addressVerified='" + getAdressVerified() + "'" +
             ", identityVerified='" + getIdentityVerified() + "'" +
             "}";
     }

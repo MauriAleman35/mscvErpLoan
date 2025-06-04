@@ -15,16 +15,14 @@ import org.springframework.stereotype.Repository;
  * For more information refer to https://github.com/jhipster/generator-jhipster/issues/17990.
  */
 @Repository
-public interface UserRepository extends UserRepositoryWithBagRelationships, JpaRepository<User, Long> {
-    default Optional<User> findOneWithEagerRelationships(Long id) {
-        return this.fetchBagRelationships(this.findById(id));
-    }
+public interface UserRepository extends JpaRepository<User, Long> {
+    // Método usado en userByEmail query
+    Optional<User> findOneByEmail(String email);
 
-    default List<User> findAllWithEagerRelationships() {
-        return this.fetchBagRelationships(this.findAll());
-    }
+    // Métodos para filtrar usuarios
+    List<User> findByEmailContaining(String email);
 
-    default Page<User> findAllWithEagerRelationships(Pageable pageable) {
-        return this.fetchBagRelationships(this.findAll(pageable));
-    }
+    List<User> findByUserType(String userType);
+
+    List<User> findByStatus(String status);
 }

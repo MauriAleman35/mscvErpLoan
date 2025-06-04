@@ -11,6 +11,7 @@ import org.springframework.stereotype.Repository;
 @SuppressWarnings("unused")
 @Repository
 public interface DocumentRepository extends JpaRepository<Document, Long> {
-    @Query("select document from Document document where document.user.login = ?#{authentication.name}")
-    List<Document> findByUserIsCurrentUser();
+    List<Document> findByUserId(Long userId);
+
+    List<Document> findByVerified(Boolean verified);
 }

@@ -55,6 +55,7 @@ public class Offer implements Serializable {
     private Instant createdAt;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_solicitude")
     @JsonIgnoreProperties(value = { "borrower" }, allowSetters = true)
     private Solicitude solicitude;
 
