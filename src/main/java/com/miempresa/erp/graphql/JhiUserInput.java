@@ -1,5 +1,8 @@
 package com.miempresa.erp.graphql;
 
+import lombok.Data;
+
+@Data
 public class JhiUserInput {
 
     private String name;
@@ -14,21 +17,20 @@ public class JhiUserInput {
     private Boolean adressVerified;
     private Boolean identityVerified;
 
-    // Getters and setters
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
     public String getLastName() {
         return lastName;
     }
 
     public void setLastName(String lastName) {
         this.lastName = lastName;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     public String getEmail() {
@@ -91,8 +93,8 @@ public class JhiUserInput {
         return adressVerified;
     }
 
-    public void setAdressVerified(Boolean addressVerified) {
-        this.adressVerified = addressVerified;
+    public void setAdressVerified(Boolean adressVerified) {
+        this.adressVerified = adressVerified;
     }
 
     public Boolean getIdentityVerified() {

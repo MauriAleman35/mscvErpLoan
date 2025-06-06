@@ -3,6 +3,9 @@ package com.miempresa.erp.repository;
 import com.miempresa.erp.domain.Solicitude;
 import java.math.BigDecimal;
 import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.*;
 import org.springframework.stereotype.Repository;
 
@@ -13,8 +16,8 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface SolicitudeRepository extends JpaRepository<Solicitude, Long> {
     // Métodos para filtrar solicitudes
-    List<Solicitude> findByStatus(String status);
-
+    List<Solicitude> findByStatus(String status, PageRequest pageRequest);
+    Page<Solicitude> findByStatus(String status, Pageable pageable);
     List<Solicitude> findByBorrowerId(Long borrowerId);
 
     // Métodos para contar

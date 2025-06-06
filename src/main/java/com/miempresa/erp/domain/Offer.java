@@ -8,6 +8,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.CreationTimestamp;
 
 /**
  * A Offer.
@@ -26,33 +27,27 @@ public class Offer implements Serializable {
     @Column(name = "id")
     private Long id;
 
-    @NotNull
     @Column(name = "partner_id", nullable = false)
-    private Integer partnerId;
+    private Long partnerId;
 
-    @NotNull
     @Column(name = "interest", precision = 21, scale = 2, nullable = false)
     private BigDecimal interest;
 
-    @NotNull
     @Column(name = "loan_term", nullable = false)
     private Integer loanTerm;
 
-    @NotNull
     @Column(name = "monthly_payment", precision = 21, scale = 2, nullable = false)
     private BigDecimal monthlyPayment;
 
-    @NotNull
     @Column(name = "total_repayment_amount", precision = 21, scale = 2, nullable = false)
     private BigDecimal totalRepaymentAmount;
 
-    @NotNull
     @Column(name = "status", nullable = false)
     private String status;
 
-    @NotNull
+    @CreationTimestamp
     @Column(name = "created_at", nullable = false)
-    private Instant createdAt;
+    private java.sql.Timestamp createdAt;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_solicitude")
@@ -74,16 +69,16 @@ public class Offer implements Serializable {
         this.id = id;
     }
 
-    public Integer getPartnerId() {
+    public Long getPartnerId() {
         return this.partnerId;
     }
 
-    public Offer partnerId(Integer partnerId) {
+    public Offer partnerId(Long partnerId) {
         this.setPartnerId(partnerId);
         return this;
     }
 
-    public void setPartnerId(Integer partnerId) {
+    public void setPartnerId(Long partnerId) {
         this.partnerId = partnerId;
     }
 
@@ -152,16 +147,16 @@ public class Offer implements Serializable {
         this.status = status;
     }
 
-    public Instant getCreatedAt() {
+    public java.sql.Timestamp getCreatedAt() {
         return this.createdAt;
     }
 
-    public Offer createdAt(Instant createdAt) {
+    public Offer createdAt(java.sql.Timestamp createdAt) {
         this.setCreatedAt(createdAt);
         return this;
     }
 
-    public void setCreatedAt(Instant createdAt) {
+    public void setCreatedAt(java.sql.Timestamp createdAt) {
         this.createdAt = createdAt;
     }
 

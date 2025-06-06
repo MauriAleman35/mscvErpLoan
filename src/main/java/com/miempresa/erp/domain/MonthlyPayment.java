@@ -8,6 +8,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.CreationTimestamp;
 
 /**
  * A MonthlyPayment.
@@ -26,35 +27,28 @@ public class MonthlyPayment implements Serializable {
     @Column(name = "id")
     private Long id;
 
-    @NotNull
+    @CreationTimestamp
     @Column(name = "due_date", nullable = false)
     private Instant dueDate;
 
-    @NotNull
     @Column(name = "payment_date", nullable = false)
     private Instant paymentDate;
 
-    @NotNull
     @Column(name = "borrow_verified", nullable = false)
     private Boolean borrowVerified;
 
-    @NotNull
     @Column(name = "partner_verified", nullable = false)
     private Boolean partnerVerified;
 
-    @NotNull
     @Column(name = "comprobant_file", nullable = false)
     private String comprobantFile;
 
-    @NotNull
     @Column(name = "days_late", nullable = false)
     private Integer daysLate;
 
-    @NotNull
     @Column(name = "penalty_amount", precision = 21, scale = 2, nullable = false)
     private BigDecimal penaltyAmount;
 
-    @NotNull
     @Column(name = "payment_status", nullable = false)
     private String paymentStatus;
 

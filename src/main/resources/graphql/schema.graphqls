@@ -1,5 +1,5 @@
 # Schema GraphQL para sistema ERP de préstamos
-
+scalar Upload
 scalar Date
 scalar DateTime
 scalar BigDecimal
@@ -30,7 +30,11 @@ type Offer {
   solicitude: Solicitude
   loan: Loan
 }
-
+type AuthPayload {
+  token: String!
+  userType: String
+  roles: [String]
+}
 type Solicitude {
   id: ID!
   loanAmount: BigDecimal!
@@ -111,13 +115,10 @@ input LoanInput {
 }
 
 input OfferInput {
-  partnerId: Int
-  interest: BigDecimal
-  loanTerm: Int
-  monthlyPayment: BigDecimal
-  totalRepaymentAmount: BigDecimal
-  status: String
-  solicitudeId: ID
+  partnerId: Int!               # ID del prestamista
+  interest: BigDecimal!         # Tasa de interés mensual (ej: 8.25)
+  loanTerm: Int!                # Plazo en meses
+  solicitudeId: ID!             # ID de la solicitud
 }
 
 input SolicitudeInput {
@@ -141,11 +142,14 @@ input JhiUserInput {
 }
 
 input DocumentInput {
+  documentType: String
+  file: Upload
   urlFile: String
-  uploadDate: DateTime
+  uploadDate: String
   verified: Boolean
   userId: ID
 }
+
 
 input MonthlyPaymentInput {
   dueDate: DateTime
@@ -166,7 +170,11 @@ input UserSubscriptionInput {
   userId: ID
   subscriptionPlanId: ID
 }
-
+input PaymentInput {
+  monthlyPaymentId: ID!
+  comprobantFile: String!  # URL o hash del comprobante
+  paymentDate: DateTime!   # Fecha de pago
+}
 input SubscriptionPlanInput {
   name: String
   description: String
@@ -213,17 +221,22 @@ type Query {
   loan(id: ID!): Loan
   loans(filter: LoanFilter, page: Int, size: Int): [Loan]
   loanCount(filter: LoanFilter): Int
-
+  # Para ambos: ver estado de préstamos activos
+  activeLoansByUser(userId: ID!): [Loan]
   # Offer queries
   offer(id: ID!): Offer
   offers(filter: OfferFilter, page: Int, size: Int): [Offer]
   offerCount(filter: OfferFilter): Int
-
+  # Para prestatarios: ver ofertas recibidas para su solicitud
+  offersBySolicitude(solicitudeId: ID!, status: String): [Offer]
+  # Para prestatarios: ver ofertas pendientes para decidir
+  pendingOffersBySolicitude(solicitudeId: ID!): [Offer]
   # Solicitude queries
   solicitude(id: ID!): Solicitude
   solicitudes(filter: SolicitudeFilter, page: Int, size: Int): [Solicitude]
   solicitudeCount(filter: SolicitudeFilter): Int
-
+  # Para prestamistas: solicitudes disponibles para ofertar
+  availableSolicitudes(page: Int, size: Int): [Solicitude]
   # JhiUser queries
   user(id: ID!): JhiUser
   userByEmail(email: String!): JhiUser
@@ -248,9 +261,20 @@ type Query {
   subscriptionPlans(status: String): [SubscriptionPlan]
   activeSubscriptionPlans: [SubscriptionPlan]
 }
-
+type VerificationResult {
+  verified: Boolean!
+  message: String
+}
 # Mutations
 type Mutation {
+  #authentication
+  login(username: String!, password: String!): AuthPayload
+
+  # Para prestatarios: registrar pago de una cuota
+  payMonthlyPayment(input: PaymentInput!): MonthlyPayment
+
+  # Para prestamistas: verificar pago de cuota
+  verifyPayment(id: ID!, verified: Boolean!): MonthlyPayment
   # Loan mutations
   createLoan(input: LoanInput!): Loan
   updateLoan(id: ID!, input: LoanInput!): Loan
@@ -261,11 +285,17 @@ type Mutation {
   updateOffer(id: ID!, input: OfferInput!): Offer
   deleteOffer(id: ID!): Boolean
   acceptOffer(id: ID!): Loan
+  # Para prestatarios: ver ofertas recibidas para su solicitud
+  offersBySolicitude(solicitudeId: ID!, status: String): [Offer]
+
 
   # Solicitude mutations
   createSolicitude(input: SolicitudeInput!): Solicitude
   updateSolicitude(id: ID!, input: SolicitudeInput!): Solicitude
   deleteSolicitude(id: ID!): Boolean
+
+
+
 
   # JhiUser mutations
   createUser(input: JhiUserInput!): JhiUser
@@ -275,10 +305,12 @@ type Mutation {
   verifyUserAddress(id: ID!, verified: Boolean!): JhiUser
 
   # Document mutations
+  uploadDocument(documentType: String!, file: Upload!, userId: ID!): Document!
   createDocument(input: DocumentInput!): Document
   updateDocument(id: ID!, input: DocumentInput!): Document
   deleteDocument(id: ID!): Boolean
   verifyDocument(id: ID!, verified: Boolean!): Document
+  verifyIdentity(userId: ID!): VerificationResult!
 
   # MonthlyPayment mutations
   createMonthlyPayment(input: MonthlyPaymentInput!): MonthlyPayment

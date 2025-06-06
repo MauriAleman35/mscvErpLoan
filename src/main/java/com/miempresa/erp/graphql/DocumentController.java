@@ -1,0 +1,220 @@
+package com.miempresa.erp.graphql;
+
+import com.miempresa.erp.domain.Document;
+import com.miempresa.erp.domain.User;
+import com.miempresa.erp.repository.DocumentRepository;
+import com.miempresa.erp.repository.UserRepository;
+import com.miempresa.erp.services.PinataService;
+import com.miempresa.erp.services.RekognitionService;
+import java.io.IOException;
+import java.time.Instant;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+@RestController
+@RequestMapping("/api")
+public class DocumentController {
+
+    private final Logger log = LoggerFactory.getLogger(DocumentController.class);
+    private final RekognitionService rekognitionService;
+    private final DocumentRepository documentRepository;
+    private final UserRepository userRepository;
+    private final PinataService pinataService;
+    private final com.miempresa.erp.service.SimpleTextractService textractService;
+
+    public DocumentController(
+        RekognitionService rekognitionService,
+        DocumentRepository documentRepository,
+        UserRepository userRepository,
+        PinataService pinataService,
+        com.miempresa.erp.service.SimpleTextractService textractService
+    ) {
+        this.rekognitionService = rekognitionService;
+        this.documentRepository = documentRepository;
+        this.userRepository = userRepository;
+        this.pinataService = pinataService;
+        this.textractService = textractService;
+    }
+
+    @PostMapping("/documents/upload")
+    public ResponseEntity<Map<String, Object>> uploadDocument(
+        @RequestParam("file") MultipartFile file,
+        @RequestParam("documentType") String documentType,
+        @RequestParam("userId") Long userId
+    ) {
+        try {
+            log.info("Recibiendo archivo: {} de tipo {}, tamaño: {}", file.getOriginalFilename(), documentType, file.getSize());
+
+            // Subir a Pinata
+            String ipfsUrl = pinataService.uploadFile(file, documentType);
+
+            String httpUrl = pinataService.getHttpUrl(ipfsUrl);
+            // Verificar que se obtuvo una URL válida
+            // Crear documento
+            Document document = new Document();
+            document.setUrlFile(httpUrl); // Guarda la URL ipfs://hash
+            document.setUploadDate(Instant.now());
+            document.setVerified(false);
+
+            // Asignar usuario
+            User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+            document.setUser(user);
+
+            Document savedDoc = documentRepository.save(document);
+            log.info("Documento guardado con ID: {}", savedDoc.getId());
+
+            // Convertir a URL HTTP para visualización
+
+            // Respuesta con información completa
+            Map<String, Object> response = new HashMap<>();
+            response.put("id", savedDoc.getId());
+            response.put("urlFile", savedDoc.getUrlFile()); // URL original ipfs://hash
+            response.put("httpUrl", httpUrl); // URL HTTP para visualización
+            response.put("uploadDate", savedDoc.getUploadDate());
+            response.put("verified", savedDoc.getVerified());
+
+            return ResponseEntity.ok(response);
+        } catch (IOException e) {
+            log.error("Error al subir documento: {}", e.getMessage(), e);
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    //metodo para verificar identidad de Prestatario
+    @PostMapping("/verify-identity")
+    public ResponseEntity<Map<String, Object>> verifyIdentity(
+        @RequestParam("documentImage") MultipartFile documentImage,
+        @RequestParam("selfieImage") MultipartFile selfieImage,
+        @RequestParam("userId") Long userId
+    ) {
+        log.info("Iniciando verificación de identidad para usuario ID: {}", userId);
+
+        try {
+            Optional<User> findUser = userRepository.findById(userId);
+            if (findUser.isEmpty()) {
+                log.error("Usuario no encontrado con ID: {}", userId);
+                return ResponseEntity.badRequest().body(Map.of("error", "Usuario no encontrado"));
+            }
+            if (findUser.get().getIdentityVerified() == true) {
+                log.info("Usuario ya verificado: {}", userId);
+                return ResponseEntity.ok(Map.of("message", "Usuario ya verificado"));
+            }
+            // 1. Verificar identidad con AWS Rekognition
+            RekognitionService.VerificationResult result = rekognitionService.verifyIdentity(documentImage, selfieImage);
+
+            // 2. Si la verificación es exitosa, guardar imágenes y actualizar estado
+            Map<String, Object> response = new HashMap<>();
+            response.put("verified", result.isVerified());
+            response.put("similarity", result.getSimilarity());
+            response.put("message", result.getMessage());
+
+            if (result.isVerified()) {
+                // Actualizar usuario como verificado
+                User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+                user.setIdentityVerified(true);
+                userRepository.save(user);
+
+                // Guardar documentos en Pinata/IPFS
+                Document docAnverso = saveDocument(documentImage, "ID_FRONT", user);
+                Document docSelfie = saveDocument(selfieImage, "SELFIE", user);
+
+                // Añadir IDs de documentos a la respuesta
+                response.put("documentId", docAnverso.getId());
+                response.put("selfieId", docSelfie.getId());
+                response.put("userVerified", true);
+            }
+
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("Error en el proceso de verificación: {}", e.getMessage(), e);
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("verified", false);
+            errorResponse.put("error", e.getMessage());
+            return ResponseEntity.badRequest().body(errorResponse);
+        }
+    }
+
+    private Document saveDocument(MultipartFile file, String type, User user) throws IOException {
+        // Subir a Pinata/IPFS
+        String ipfsUrl = pinataService.uploadFile(file, type);
+        String httpUrl = pinataService.getHttpUrl(ipfsUrl);
+        // Crear documento
+        Document document = new Document();
+
+        document.setUrlFile(httpUrl);
+        document.setUploadDate(Instant.now());
+        document.setVerified(true); // Ya verificado por Rekognition
+        document.setUser(user);
+
+        return documentRepository.save(document);
+    }
+
+    @GetMapping("/documents/{id}/url")
+    public ResponseEntity<Map<String, String>> getDocumentUrl(@PathVariable Long id) {
+        Document document = documentRepository.findById(id).orElseThrow(() -> new RuntimeException("Documento no encontrado"));
+
+        String httpUrl = pinataService.getHttpUrl(document.getUrlFile());
+
+        Map<String, String> response = new HashMap<>();
+        response.put("urlFile", document.getUrlFile()); // URL original ipfs://hash
+        response.put("httpUrl", httpUrl); // URL HTTP para visualización
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/verify-address")
+    public ResponseEntity<Map<String, Object>> verifyAddress(
+        @RequestParam("document") MultipartFile document,
+        @RequestParam("userId") Long userId
+    ) {
+        try {
+            // Obtener usuario y dirección registrada
+            User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+            String firstName = user.getName();
+            String lastName = user.getLastName();
+
+            // Extraer texto del documento con Textract
+            String extractedText = textractService.extractText(document);
+
+            // Comparación simple
+            boolean isVerified = textractService.verifyUserName(extractedText, firstName, lastName);
+
+            // Guardar documento en IPFS si es necesario
+            String documentUrl = pinataService.uploadFile(document, "ADDRESS_PROOF");
+
+            // Crear documento en la base de datos
+            Document addressDoc = new Document();
+
+            addressDoc.setUrlFile(documentUrl);
+            addressDoc.setUploadDate(Instant.now());
+            addressDoc.setVerified(isVerified);
+            addressDoc.setUser(user);
+            documentRepository.save(addressDoc);
+
+            // Si está verificado, actualizar usuario
+            if (isVerified) {
+                user.setAddressVerified(true); // Asegúrate que tu modelo User tenga este campo
+                userRepository.save(user);
+            }
+
+            // Preparar respuesta
+            Map<String, Object> response = new HashMap<>();
+            response.put("verified", isVerified);
+            response.put("documentId", addressDoc.getId());
+            response.put("extractedText", extractedText); // Solo para depuración
+
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("verified", false);
+            errorResponse.put("error", e.getMessage());
+            return ResponseEntity.badRequest().body(errorResponse);
+        }
+    }
+}

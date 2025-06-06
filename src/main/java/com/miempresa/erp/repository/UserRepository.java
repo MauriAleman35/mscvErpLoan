@@ -18,9 +18,10 @@ import org.springframework.stereotype.Repository;
 public interface UserRepository extends JpaRepository<User, Long> {
     // Método usado en userByEmail query
     Optional<User> findOneByEmail(String email);
-
+    Optional<User> findByEmail(String email);
     // Métodos para filtrar usuarios
     List<User> findByEmailContaining(String email);
+    Optional<User> findByEmailIgnoreCase(String email);
 
     List<User> findByUserType(String userType);
 

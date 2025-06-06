@@ -5,6 +5,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 import org.springframework.data.jpa.repository.*;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 /**
@@ -16,10 +17,19 @@ public interface LoanRepository extends JpaRepository<Loan, Long> {
     @Override
     List<Loan> findAll();
 
+    @Query("SELECT l FROM Loan l WHERE l.offer.solicitude.borrower.id = :userId AND l.currentStatus = 'al_dia'")
+    List<Loan> findActiveLoansByBorrowerId(@Param("userId") Long userId);
+
     // Métodos para filtrar préstamos
     //<Loan> findByCurrentStatus(String currentStatus);
+    // Para encontrar préstamos donde el usuario es el prestamista (partner)
+    @Query("SELECT l FROM Loan l WHERE l.offer.partnerId = :partnerId AND l.currentStatus = 'al_dia'")
+    List<Loan> findActiveLoansByPartnerId(@Param("partnerId") Integer partnerId);
 
     List<Loan> findByLoanAmountBetween(BigDecimal minAmount, BigDecimal maxAmount);
+
+    @Query("SELECT l FROM Loan l WHERE l.offer.solicitude.borrower.id = :userId AND l.currentStatus = 'al_dia'")
+    List<Loan> findActiveLoansByUserId(@Param("userId") Long userId);
 
     // Métodos para contar préstamos
     Integer countByCurrentStatus(String currentStatus);
@@ -34,4 +44,7 @@ public interface LoanRepository extends JpaRepository<Loan, Long> {
 
     // Métodos para búsqueda combinada
     List<Loan> findByCurrentStatusAndLoanAmountGreaterThan(String status, BigDecimal minAmount);
+
+    // Método para encontrar por estado
+    List<Loan> findByCurrentStatus(String status);
 }

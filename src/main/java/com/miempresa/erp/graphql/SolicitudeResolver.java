@@ -4,7 +4,12 @@ import com.miempresa.erp.domain.Solicitude;
 import com.miempresa.erp.domain.User;
 import com.miempresa.erp.repository.SolicitudeRepository;
 import com.miempresa.erp.repository.UserRepository;
+import java.awt.print.Pageable;
+import java.time.Instant;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.MutationMapping;
 import org.springframework.graphql.data.method.annotation.QueryMapping;
@@ -38,9 +43,9 @@ public class SolicitudeResolver {
         }
 
         // Implementar filtros básicos
-        if (filter.getStatus() != null) {
-            return solicitudeRepository.findByStatus(filter.getStatus());
-        }
+        // if (filter.getStatus() != null) {
+        //  return solicitudeRepository.findByStatus(filter.getStatus());
+        // }
 
         if (filter.getBorrowerId() != null) {
             return solicitudeRepository.findByBorrowerId(filter.getBorrowerId());
@@ -65,18 +70,24 @@ public class SolicitudeResolver {
 
     // Mutations
     @MutationMapping
-    public Solicitude createSolicitude(@Argument SolicitudeInput input) {
+    public Map<String, Object> createSolicitude(@Argument SolicitudeInput input) {
+        User borrower = jhiUserRepository.findById(input.getBorrowerId()).orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
         Solicitude solicitude = new Solicitude();
-        mapSolicitudeInputToEntity(input, solicitude);
+        solicitude.setLoanAmount(input.getLoanAmount());
+        solicitude.setStatus(input.getStatus() != null ? input.getStatus() : "pendiente");
+        solicitude.setBorrower(borrower);
 
-        if (input.getBorrowerId() != null) {
-            User borrower = jhiUserRepository
-                .findById(input.getBorrowerId())
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
-            solicitude.setBorrower(borrower);
-        }
+        Solicitude savedSolicitude = solicitudeRepository.save(solicitude);
 
-        return solicitudeRepository.save(solicitude);
+        // Crear un mapa para evitar problemas de serialización
+        Map<String, Object> result = new HashMap<>();
+        result.put("id", savedSolicitude.getId().toString());
+        result.put("loanAmount", savedSolicitude.getLoanAmount());
+        result.put("status", savedSolicitude.getStatus());
+        result.put("createdAt", savedSolicitude.getCreatedAt().toString()); // Convertir a String
+
+        return result;
     }
 
     @MutationMapping
@@ -102,6 +113,22 @@ public class SolicitudeResolver {
             return true;
         } catch (Exception e) {
             return false;
+        }
+    }
+
+    /**
+     *
+     *
+     *
+     */
+
+    @QueryMapping
+    public List<Solicitude> availableSolicitudes(@Argument Integer page, @Argument Integer size) {
+        if (page != null && size != null) {
+            Pageable pageable = (Pageable) PageRequest.of(page, size);
+            return solicitudeRepository.findByStatus("pendiente", (PageRequest) pageable);
+        } else {
+            return null;
         }
     }
 

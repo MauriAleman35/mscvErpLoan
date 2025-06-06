@@ -1,8 +1,10 @@
 package com.miempresa.erp.graphql;
 
 import com.miempresa.erp.domain.Loan;
+import com.miempresa.erp.domain.MonthlyPayment;
 import com.miempresa.erp.domain.Offer;
 import com.miempresa.erp.repository.LoanRepository;
+import com.miempresa.erp.repository.MonthlyPaymentRepository;
 import com.miempresa.erp.repository.OfferRepository;
 import java.math.BigDecimal;
 import java.util.List;
@@ -18,10 +20,12 @@ public class LoanResolver {
 
     private final LoanRepository loanRepository;
     private final OfferRepository offerRepository;
+    private final MonthlyPaymentRepository monthlyPaymentRepository;
 
-    public LoanResolver(LoanRepository loanRepository, OfferRepository offerRepository) {
+    public LoanResolver(LoanRepository loanRepository, OfferRepository offerRepository, MonthlyPaymentRepository monthlyPaymentRepository) {
         this.loanRepository = loanRepository;
         this.offerRepository = offerRepository;
+        this.monthlyPaymentRepository = monthlyPaymentRepository;
     }
 
     // Queries
@@ -97,6 +101,16 @@ public class LoanResolver {
         } catch (Exception e) {
             return false;
         }
+    }
+
+    @QueryMapping
+    public List<MonthlyPayment> monthlyPaymentsByLoan(@Argument Long loanId) {
+        return monthlyPaymentRepository.findByLoanIdOrderByDueDateAsc(loanId);
+    }
+
+    @QueryMapping
+    public MonthlyPayment monthlyPayment(@Argument Long id) {
+        return monthlyPaymentRepository.findById(id).orElseThrow(() -> new RuntimeException("Pago mensual no encontrado"));
     }
 
     // Helper method

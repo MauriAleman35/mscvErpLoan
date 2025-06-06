@@ -26,47 +26,36 @@ public class User implements Serializable {
     @Column(name = "id")
     private Long id;
 
-    @NotNull
     @Column(name = "name", nullable = false)
     private String name;
 
-    @NotNull
     @Column(name = "last_name", nullable = false)
     private String lastName;
 
-    @NotNull
     @Column(name = "email", nullable = false)
     private String email;
 
-    @NotNull
     @Column(name = "phone", nullable = false)
     private String phone;
 
-    @NotNull
     @Column(name = "ci", nullable = false)
     private String ci;
 
-    @NotNull
     @Column(name = "password", nullable = false)
     private String password;
 
-    @NotNull
     @Column(name = "score", nullable = false)
     private Integer score;
 
-    @NotNull
     @Column(name = "status", nullable = false)
     private String status;
 
-    @NotNull
     @Column(name = "user_type", nullable = false)
     private String userType;
 
-    @NotNull
     @Column(name = "adress_verified", nullable = false)
     private Boolean adressVerified;
 
-    @NotNull
     @Column(name = "identity_verified", nullable = false)
     private Boolean identityVerified;
 

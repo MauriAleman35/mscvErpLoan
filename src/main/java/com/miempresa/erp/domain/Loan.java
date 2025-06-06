@@ -26,31 +26,24 @@ public class Loan implements Serializable {
     @Column(name = "id")
     private Long id;
 
-    @NotNull
     @Column(name = "loan_amount", precision = 21, scale = 2, nullable = false)
     private BigDecimal loanAmount;
 
-    @NotNull
     @Column(name = "start_date", nullable = false)
     private Instant startDate;
 
-    @NotNull
     @Column(name = "end_date", nullable = false)
     private Instant endDate;
 
-    @NotNull
     @Column(name = "hash_blockchain", nullable = false)
     private String hashBlockchain;
 
-    @NotNull
     @Column(name = "current_status", nullable = false)
     private String currentStatus;
 
-    @NotNull
     @Column(name = "late_payment_count", nullable = false)
     private Integer latePaymentCount;
 
-    @NotNull
     @Column(name = "last_status_update", nullable = false)
     private Instant lastStatusUpdate;
 

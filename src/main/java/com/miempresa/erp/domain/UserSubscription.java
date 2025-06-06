@@ -25,23 +25,21 @@ public class UserSubscription implements Serializable {
     @Column(name = "id")
     private Long id;
 
-    @NotNull
     @Column(name = "start_date", nullable = false)
     private Instant startDate;
 
-    @NotNull
     @Column(name = "end_date", nullable = false)
     private Instant endDate;
 
-    @NotNull
     @Column(name = "status", nullable = false)
     private String status;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JsonIgnoreProperties(value = { "roles" }, allowSetters = true)
+    @JoinColumn(name = "user_id")
     private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "subscription_id")
     private SubscriptionPlan subscriptionPlan;
 
     // jhipster-needle-entity-add-field - JHipster will add fields here

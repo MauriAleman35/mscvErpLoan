@@ -10,6 +10,7 @@ import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.MutationMapping;
 import org.springframework.graphql.data.method.annotation.QueryMapping;
 import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Transactional;
 
 @Controller
 public class MonthlyPaymentResolver {
@@ -20,17 +21,6 @@ public class MonthlyPaymentResolver {
     public MonthlyPaymentResolver(MonthlyPaymentRepository monthlyPaymentRepository, LoanRepository loanRepository) {
         this.monthlyPaymentRepository = monthlyPaymentRepository;
         this.loanRepository = loanRepository;
-    }
-
-    // Queries
-    @QueryMapping
-    public MonthlyPayment monthlyPayment(@Argument Long id) {
-        return monthlyPaymentRepository.findById(id).orElse(null);
-    }
-
-    @QueryMapping
-    public List<MonthlyPayment> monthlyPaymentsByLoan(@Argument Long loanId) {
-        return monthlyPaymentRepository.findByLoanId(loanId);
     }
 
     // Mutations
@@ -97,6 +87,74 @@ public class MonthlyPaymentResolver {
 
         monthlyPayment.setPartnerVerified(verified);
         return monthlyPaymentRepository.save(monthlyPayment);
+    }
+
+    @MutationMapping
+    @Transactional
+    public MonthlyPayment payMonthlyPayment(@Argument PaymentInput input) {
+        MonthlyPayment payment = monthlyPaymentRepository
+            .findById(input.getMonthlyPaymentId())
+            .orElseThrow(() -> new RuntimeException("Pago no encontrado"));
+
+        // Verificar que no esté pagada ya
+        if (!"pendiente".equals(payment.getPaymentStatus())) {
+            throw new RuntimeException("Esta cuota ya está pagada o procesada");
+        }
+
+        // Registrar pago
+        payment.setComprobantFile(input.getComprobantFile());
+        payment.setPaymentDate(input.getPaymentDate());
+        payment.setPaymentStatus("pagado_pendiente_verificacion");
+        payment.setBorrowVerified(true); // El prestatario siempre verifica su propio pago
+
+        return monthlyPaymentRepository.save(payment);
+    }
+
+    @MutationMapping
+    @Transactional
+    public MonthlyPayment verifyPayment(@Argument Long id, @Argument Boolean verified) {
+        MonthlyPayment payment = monthlyPaymentRepository.findById(id).orElseThrow(() -> new RuntimeException("Pago no encontrado"));
+
+        if (verified) {
+            payment.setPartnerVerified(true);
+            payment.setPaymentStatus("pagado_verificado");
+        } else {
+            payment.setPaymentStatus("rechazado");
+        }
+
+        // Actualizar estado del préstamo si es necesario
+        updateLoanStatus(payment.getLoan().getId());
+
+        return monthlyPaymentRepository.save(payment);
+    }
+
+    private void updateLoanStatus(Long loanId) {
+        Loan loan = loanRepository.findById(loanId).orElseThrow(() -> new RuntimeException("Préstamo no encontrado"));
+
+        // Contar pagos pendientes
+        long pendingPayments = monthlyPaymentRepository.countByLoanIdAndPaymentStatusNot(loanId, "pagado_verificado");
+
+        // Si no hay pagos pendientes, el préstamo está completado
+        if (pendingPayments == 0) {
+            loan.setCurrentStatus("completado");
+        } else {
+            // Verificar si hay pagos atrasados
+            long latePayments = monthlyPaymentRepository.countByLoanIdAndDueDateBeforeAndPaymentStatusNot(
+                loanId,
+                Instant.now(),
+                "pagado_verificado"
+            );
+
+            if (latePayments > 0) {
+                loan.setCurrentStatus("atrasado");
+                loan.setLatePaymentCount((int) latePayments);
+            } else {
+                loan.setCurrentStatus("al_dia");
+            }
+        }
+
+        loan.setLastStatusUpdate(Instant.now());
+        loanRepository.save(loan);
     }
 
     // Helper method

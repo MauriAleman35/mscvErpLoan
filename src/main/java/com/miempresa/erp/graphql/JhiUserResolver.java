@@ -1,23 +1,44 @@
 package com.miempresa.erp.graphql;
 
+import com.miempresa.erp.domain.Loan;
+import com.miempresa.erp.domain.Offer;
+import com.miempresa.erp.domain.Solicitude;
 import com.miempresa.erp.domain.User;
 import com.miempresa.erp.graphql.JhiUserInput;
 import com.miempresa.erp.graphql.UserFilter;
+import com.miempresa.erp.repository.LoanRepository;
+import com.miempresa.erp.repository.OfferRepository;
+import com.miempresa.erp.repository.SolicitudeRepository;
 import com.miempresa.erp.repository.UserRepository;
 import java.util.List;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.MutationMapping;
 import org.springframework.graphql.data.method.annotation.QueryMapping;
-import org.springframework.graphql.data.method.annotation.SchemaMapping;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 
 @Controller
 public class JhiUserResolver {
 
     private final UserRepository jhiUserRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final SolicitudeRepository solicitudeRepository;
+    private final OfferRepository offerRepository;
+    private final LoanRepository loanRepository;
 
-    public JhiUserResolver(UserRepository UserRepository) {
-        this.jhiUserRepository = UserRepository;
+    public JhiUserResolver(
+        UserRepository userRepository,
+        PasswordEncoder passwordEncoder,
+        SolicitudeRepository solicitudeRepository,
+        OfferRepository offerRepository,
+        LoanRepository loanRepository
+    ) {
+        this.jhiUserRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.solicitudeRepository = solicitudeRepository;
+        this.offerRepository = offerRepository;
+        this.loanRepository = loanRepository;
     }
 
     // Queries
@@ -57,7 +78,15 @@ public class JhiUserResolver {
     @MutationMapping
     public User createUser(@Argument JhiUserInput input) {
         User user = new User();
-        mapUserInputToEntity(input, user);
+
+        // Establecemos primero los campos básicos
+        mapUserInputToEntityWithoutPassword(input, user);
+
+        // Encriptamos la contraseña correctamente
+        if (input.getPassword() != null) {
+            user.setPassword(passwordEncoder.encode(input.getPassword()));
+        }
+
         return jhiUserRepository.save(user);
     }
 
@@ -65,7 +94,14 @@ public class JhiUserResolver {
     public User updateUser(@Argument Long id, @Argument JhiUserInput input) {
         User user = jhiUserRepository.findById(id).orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
-        mapUserInputToEntity(input, user);
+        // Actualizamos los campos excepto la contraseña
+        mapUserInputToEntityWithoutPassword(input, user);
+
+        // Si se proporciona una nueva contraseña, la encriptamos
+        if (input.getPassword() != null && !input.getPassword().isEmpty()) {
+            user.setPassword(passwordEncoder.encode(input.getPassword()));
+        }
+
         return jhiUserRepository.save(user);
     }
 
@@ -77,6 +113,11 @@ public class JhiUserResolver {
         } catch (Exception e) {
             return false;
         }
+    }
+
+    // Agregar método para prestamistas si es necesario
+    public List<Loan> activeLoansByPartner(Integer partnerId) {
+        return loanRepository.findActiveLoansByPartnerId(partnerId);
     }
 
     @MutationMapping
@@ -95,14 +136,30 @@ public class JhiUserResolver {
         return jhiUserRepository.save(user);
     }
 
-    // Helper method
-    private void mapUserInputToEntity(JhiUserInput input, User user) {
+    // Para prestatarios: ver ofertas recibidas para una solicitud
+    @QueryMapping
+    public List<Offer> offersBySolicitude(@Argument Long solicitudeId, @Argument String status) {
+        if (status != null && !status.isEmpty()) {
+            return offerRepository.findBySolicitudeIdAndStatus(solicitudeId, status);
+        } else {
+            return offerRepository.findBySolicitudeId(solicitudeId);
+        }
+    }
+
+    // Para ambos: ver préstamos activos
+    @QueryMapping
+    public List<Loan> activeLoansByUser(@Argument Long userId) {
+        return loanRepository.findActiveLoansByBorrowerId(userId);
+    }
+
+    // Helper method - sin procesar la contraseña
+    private void mapUserInputToEntityWithoutPassword(JhiUserInput input, User user) {
         if (input.getName() != null) user.setName(input.getName());
         if (input.getLastName() != null) user.setLastName(input.getLastName());
         if (input.getEmail() != null) user.setEmail(input.getEmail());
         if (input.getPhone() != null) user.setPhone(input.getPhone());
         if (input.getCi() != null) user.setCi(input.getCi());
-        if (input.getPassword() != null) user.setPassword(input.getPassword());
+        // No procesamos la contraseña aquí
         if (input.getScore() != null) user.setScore(input.getScore());
         if (input.getStatus() != null) user.setStatus(input.getStatus());
         if (input.getUserType() != null) user.setUserType(input.getUserType());

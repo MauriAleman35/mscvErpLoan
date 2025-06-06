@@ -4,7 +4,7 @@ import java.math.BigDecimal;
 
 public class OfferInput {
 
-    private Integer partnerId;
+    private Long partnerId;
     private BigDecimal interest;
     private Integer loanTerm;
     private BigDecimal monthlyPayment;
@@ -13,11 +13,11 @@ public class OfferInput {
     private Long solicitudeId;
 
     // Getters and setters
-    public Integer getPartnerId() {
+    public Long getPartnerId() {
         return partnerId;
     }
 
-    public void setPartnerId(Integer partnerId) {
+    public void setPartnerId(Long partnerId) {
         this.partnerId = partnerId;
     }
 

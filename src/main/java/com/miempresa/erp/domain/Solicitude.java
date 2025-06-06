@@ -8,6 +8,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.CreationTimestamp;
 
 /**
  * A Solicitude.
@@ -26,20 +27,18 @@ public class Solicitude implements Serializable {
     @Column(name = "id")
     private Long id;
 
-    @NotNull
     @Column(name = "loan_amount", precision = 21, scale = 2, nullable = false)
     private BigDecimal loanAmount;
 
-    @NotNull
     @Column(name = "status", nullable = false)
     private String status;
 
-    @NotNull
+    @CreationTimestamp
     @Column(name = "created_at", nullable = false)
-    private Instant createdAt;
+    private java.sql.Timestamp createdAt;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JsonIgnoreProperties(value = { "roles" }, allowSetters = true)
+    @JoinColumn(name = "borrower_id")
     private User borrower;
 
     // jhipster-needle-entity-add-field - JHipster will add fields here
@@ -83,16 +82,16 @@ public class Solicitude implements Serializable {
         this.status = status;
     }
 
-    public Instant getCreatedAt() {
+    public java.sql.Timestamp getCreatedAt() {
         return this.createdAt;
     }
 
-    public Solicitude createdAt(Instant createdAt) {
+    public Solicitude createdAt(java.sql.Timestamp createdAt) {
         this.setCreatedAt(createdAt);
         return this;
     }
 
-    public void setCreatedAt(Instant createdAt) {
+    public void setCreatedAt(java.sql.Timestamp createdAt) {
         this.createdAt = createdAt;
     }
 

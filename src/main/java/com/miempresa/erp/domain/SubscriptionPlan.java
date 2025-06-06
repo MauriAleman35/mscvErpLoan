@@ -24,23 +24,18 @@ public class SubscriptionPlan implements Serializable {
     @Column(name = "id")
     private Long id;
 
-    @NotNull
     @Column(name = "name", nullable = false)
     private String name;
 
-    @NotNull
     @Column(name = "description", nullable = false)
     private String description;
 
-    @NotNull
     @Column(name = "monthly_price", precision = 21, scale = 2, nullable = false)
     private BigDecimal monthlyPrice;
 
-    @NotNull
     @Column(name = "annual_price", precision = 21, scale = 2, nullable = false)
     private BigDecimal annualPrice;
 
-    @NotNull
     @Column(name = "status", nullable = false)
     private String status;
 

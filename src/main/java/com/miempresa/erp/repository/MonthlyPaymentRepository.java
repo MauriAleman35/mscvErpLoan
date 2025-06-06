@@ -23,4 +23,9 @@ public interface MonthlyPaymentRepository extends JpaRepository<MonthlyPayment, 
     List<MonthlyPayment> findByPaymentStatus(String status);
 
     List<MonthlyPayment> findByDaysLateGreaterThan(Integer days);
+
+    List<MonthlyPayment> findByLoanIdOrderByDueDateAsc(Long loanId);
+
+    Long countByLoanIdAndPaymentStatusNot(Long loanId, String verificar);
+    Long countByLoanIdAndDueDateBeforeAndPaymentStatusNot(Long loanId, Instant instant, String verificar);
 }

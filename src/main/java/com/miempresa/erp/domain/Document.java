@@ -7,6 +7,7 @@ import java.io.Serializable;
 import java.time.Instant;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.CreationTimestamp;
 
 /**
  * A Document.
@@ -25,21 +26,18 @@ public class Document implements Serializable {
     @Column(name = "id")
     private Long id;
 
-    @NotNull
     @Column(name = "url_file", nullable = false)
     private String urlFile;
 
-    @NotNull
+    @CreationTimestamp
     @Column(name = "upload_date", nullable = false)
     private Instant uploadDate;
 
-    @NotNull
     @Column(name = "verified", nullable = false)
     private Boolean verified;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
-    @JsonIgnoreProperties(value = { "roles" }, allowSetters = true)
     private User user;
 
     // jhipster-needle-entity-add-field - JHipster will add fields here
