@@ -27,8 +27,15 @@ public class Offer implements Serializable {
     @Column(name = "id")
     private Long id;
 
-    @Column(name = "partner_id", nullable = false)
+    // Este campo se mantendrá para compatibilidad con el código existente
+    @Column(name = "partner_id", nullable = false, insertable = false, updatable = false)
     private Long partnerId;
+
+    // Agregamos la relación con el usuario prestamista
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "partner_id")
+    @JsonIgnoreProperties(value = { "roles" }, allowSetters = true)
+    private User partner;
 
     @Column(name = "interest", precision = 21, scale = 2, nullable = false)
     private BigDecimal interest;
@@ -62,6 +69,22 @@ public class Offer implements Serializable {
 
     public Offer id(Long id) {
         this.setId(id);
+        return this;
+    }
+
+    public User getPartner() {
+        return this.partner;
+    }
+
+    public void setPartner(User partner) {
+        this.partner = partner;
+        if (partner != null) {
+            this.partnerId = partner.getId();
+        }
+    }
+
+    public Offer partner(User partner) {
+        this.setPartner(partner);
         return this;
     }
 

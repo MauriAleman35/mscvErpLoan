@@ -178,7 +178,7 @@ entity MonthlyPayment {
 relationship ManyToOne {
   // Un Documento pertenece a un solo Usuario
   Document{user} to User,
-
+  Offer{partner} to User,
   // Una Suscripción de Usuario pertenece a un Usuario
   UserSubscription{user} to User,
 

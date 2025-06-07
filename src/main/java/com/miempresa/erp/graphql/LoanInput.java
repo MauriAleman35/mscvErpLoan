@@ -1,20 +1,20 @@
 package com.miempresa.erp.graphql;
 
 import java.math.BigDecimal;
+import java.sql.Timestamp;
 import java.time.Instant;
 
 public class LoanInput {
 
     private BigDecimal loanAmount;
-    private Instant startDate;
-    private Instant endDate;
+    private java.sql.Timestamp startDate;
+    private java.sql.Timestamp endDate;
     private String hashBlockchain;
     private String currentStatus;
     private Integer latePaymentCount;
     private Instant lastStatusUpdate;
     private Long offerId;
 
-    // Getters and setters
     public BigDecimal getLoanAmount() {
         return loanAmount;
     }
@@ -23,19 +23,19 @@ public class LoanInput {
         this.loanAmount = loanAmount;
     }
 
-    public Instant getStartDate() {
+    public java.sql.Timestamp getStartDate() {
         return startDate;
     }
 
-    public void setStartDate(Instant startDate) {
+    public void setStartDate(java.sql.Timestamp startDate) {
         this.startDate = startDate;
     }
 
-    public Instant getEndDate() {
+    public java.sql.Timestamp getEndDate() {
         return endDate;
     }
 
-    public void setEndDate(Instant endDate) {
+    public void setEndDate(java.sql.Timestamp endDate) {
         this.endDate = endDate;
     }
 

@@ -1,12 +1,15 @@
 package com.miempresa.erp.graphql;
 
 import com.miempresa.erp.domain.Document;
+import com.miempresa.erp.domain.MonthlyPayment;
 import com.miempresa.erp.domain.User;
 import com.miempresa.erp.repository.DocumentRepository;
+import com.miempresa.erp.repository.MonthlyPaymentRepository;
 import com.miempresa.erp.repository.UserRepository;
 import com.miempresa.erp.services.PinataService;
 import com.miempresa.erp.services.RekognitionService;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
@@ -14,6 +17,7 @@ import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -26,6 +30,7 @@ public class DocumentController {
     private final DocumentRepository documentRepository;
     private final UserRepository userRepository;
     private final PinataService pinataService;
+    private final MonthlyPaymentRepository monthlyPaymentRepository;
     private final com.miempresa.erp.service.SimpleTextractService textractService;
 
     public DocumentController(
@@ -33,12 +38,14 @@ public class DocumentController {
         DocumentRepository documentRepository,
         UserRepository userRepository,
         PinataService pinataService,
+        MonthlyPaymentRepository monthlyPaymentRepository,
         com.miempresa.erp.service.SimpleTextractService textractService
     ) {
         this.rekognitionService = rekognitionService;
         this.documentRepository = documentRepository;
         this.userRepository = userRepository;
         this.pinataService = pinataService;
+        this.monthlyPaymentRepository = monthlyPaymentRepository;
         this.textractService = textractService;
     }
 
@@ -215,6 +222,71 @@ public class DocumentController {
             errorResponse.put("verified", false);
             errorResponse.put("error", e.getMessage());
             return ResponseEntity.badRequest().body(errorResponse);
+        }
+    }
+
+    @PostMapping("/pay-monthly-payment")
+    @Transactional
+    public ResponseEntity<?> payMonthlyPayment(@RequestParam("file") MultipartFile file, @RequestParam("paymentId") Long paymentId) {
+        try {
+            // 1. Obtener el pago mensual
+            MonthlyPayment payment = monthlyPaymentRepository
+                .findById(paymentId)
+                .orElseThrow(() -> new RuntimeException("Pago mensual no encontrado"));
+
+            // 2. Verificar que el pago esté pendiente
+            if (!"pendiente".equals(payment.getPaymentStatus())) {
+                Map<String, String> error = new HashMap<>();
+                error.put("error", "Este pago ya no está pendiente");
+                return ResponseEntity.badRequest().body(error);
+            }
+
+            // 3. Subir el comprobante a Pinata
+            String fileName = "comprobante_" + paymentId + "_" + System.currentTimeMillis();
+            String ipfsUrl = pinataService.uploadFile(file, fileName);
+            String httpUrl = pinataService.getHttpUrl(ipfsUrl);
+
+            // 4. Actualizar el pago
+            payment.setComprobantFile(httpUrl);
+            payment.setPaymentDate(Instant.now());
+            payment.setPaymentStatus("pendiente");
+            payment.setBorrowVerified(true);
+            payment.setPartnerVerified(false);
+
+            // 5. Calcular días de retraso si aplica
+            Instant dueDate = payment.getDueDate();
+            if (dueDate != null && Instant.now().isAfter(dueDate)) {
+                long daysLate = java.time.Duration.between(dueDate, Instant.now()).toDays();
+                payment.setDaysLate((int) daysLate);
+
+                // 6. Calcular penalidad si hay retraso
+                if (daysLate > 0) {
+                    BigDecimal penaltyRate = new BigDecimal("0.01"); // 1% por día
+                    BigDecimal amount = payment.getLoan().getOffer().getMonthlyPayment();
+                    BigDecimal penalty = amount.multiply(penaltyRate).multiply(new BigDecimal(daysLate));
+                    payment.setPenaltyAmount(penalty);
+                }
+            }
+
+            // 7. Guardar el pago actualizado
+            monthlyPaymentRepository.save(payment);
+
+            // 8. Preparar respuesta
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("paymentId", payment.getId());
+            response.put("comprobantUrl", httpUrl);
+            response.put("status", payment.getPaymentStatus());
+
+            return ResponseEntity.ok(response);
+        } catch (IOException e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Error al subir el comprobante: " + e.getMessage());
+            return ResponseEntity.status(500).body(error);
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", e.getMessage());
+            return ResponseEntity.status(500).body(error);
         }
     }
 }

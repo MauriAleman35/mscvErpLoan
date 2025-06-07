@@ -60,7 +60,14 @@ type JhiUser {
   solicitudes: [Solicitude]
   subscriptions: [UserSubscription]
 }
-
+type PendingSolicitude {
+  id: ID!
+  loanAmount: Float
+  loanPurpose: String
+  termMonths: Int
+  createdDate: DateTime
+  offersCount: Int
+}
 type Document {
   id: ID!
   urlFile: String
@@ -199,7 +206,17 @@ input OfferFilter {
   partnerId: Int
   solicitudeId: ID
 }
-
+type PaymentDetail {
+  id: ID!
+  dueDate: DateTime
+  paymentDate: DateTime
+  paymentStatus: String
+  comprobantFile: String
+  cuotaNumber: Int
+  totalCuotas:Int
+  expectedPayment: Float
+  penaltyAmount: Float
+}
 input SolicitudeFilter {
   id: ID
   status: String
@@ -221,22 +238,31 @@ type Query {
   loan(id: ID!): Loan
   loans(filter: LoanFilter, page: Int, size: Int): [Loan]
   loanCount(filter: LoanFilter): Int
-  # Para ambos: ver estado de préstamos activos
+  loansByPartnerId(partnerId: ID!): [Loan]
+  # Para Prestario: ver estado de préstamos activos
   activeLoansByUser(userId: ID!): [Loan]
+  # Para ambos: ver estado de préstamos activos
+  activeLoansByPartner(userId: ID!): [Loan]
   # Offer queries
   offer(id: ID!): Offer
   offers(filter: OfferFilter, page: Int, size: Int): [Offer]
   offerCount(filter: OfferFilter): Int
   # Para prestatarios: ver ofertas recibidas para su solicitud
-  offersBySolicitude(solicitudeId: ID!, status: String): [Offer]
+  offersBySolicitude(solicitudeId: ID!, status: String!): [Offer]
   # Para prestatarios: ver ofertas pendientes para decidir
   pendingOffersBySolicitude(solicitudeId: ID!): [Offer]
+
+  # Obtener solicitudes pendientes para prestamistas
+  pendingSolicitudesForPartner: [PendingSolicitude]!
+
+  # Obtener detalle de una solicitud específica
+  solicitudeDetail(id: ID!): PendingSolicitude
   # Solicitude queries
   solicitude(id: ID!): Solicitude
   solicitudes(filter: SolicitudeFilter, page: Int, size: Int): [Solicitude]
   solicitudeCount(filter: SolicitudeFilter): Int
   # Para prestamistas: solicitudes disponibles para ofertar
-  availableSolicitudes(page: Int, size: Int): [Solicitude]
+  availableSolicitudes(page: Int, size: Int, daysBack:Int): [Solicitude]
   # JhiUser queries
   user(id: ID!): JhiUser
   userByEmail(email: String!): JhiUser
@@ -250,7 +276,10 @@ type Query {
   # MonthlyPayment queries
   monthlyPayment(id: ID!): MonthlyPayment
   monthlyPaymentsByLoan(loanId: ID!): [MonthlyPayment]
+  paidMonthlyPaymentsByUser(userId: ID!): [PaymentDetail]
+  paymentsToVerify(partnerId: ID!): [MonthlyPayment]
 
+  monthlyPaymentsByLoanAndStatus(loanId: ID!, status: String!): [MonthlyPayment]
   # UserSubscription queries
   userSubscription(id: ID!): UserSubscription
   userSubscriptionsByUser(userId: ID!): [UserSubscription]

@@ -2,14 +2,19 @@ package com.miempresa.erp.graphql;
 
 import com.miempresa.erp.domain.Solicitude;
 import com.miempresa.erp.domain.User;
+import com.miempresa.erp.dto.SolicitudeDTO;
 import com.miempresa.erp.repository.SolicitudeRepository;
 import com.miempresa.erp.repository.UserRepository;
-import java.awt.print.Pageable;
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.MutationMapping;
 import org.springframework.graphql.data.method.annotation.QueryMapping;
@@ -123,13 +128,38 @@ public class SolicitudeResolver {
      */
 
     @QueryMapping
-    public List<Solicitude> availableSolicitudes(@Argument Integer page, @Argument Integer size) {
+    public List<SolicitudeDTO> availableSolicitudes(@Argument Integer page, @Argument Integer size, @Argument Integer daysBack) {
+        // Definir fecha de inicio (por defecto 30 días si no se especifica)
+        int days = daysBack != null ? daysBack : 30;
+        LocalDateTime startDate = LocalDateTime.now().minus(days, ChronoUnit.DAYS);
+
+        List<Solicitude> solicitudes;
         if (page != null && size != null) {
-            Pageable pageable = (Pageable) PageRequest.of(page, size);
-            return solicitudeRepository.findByStatus("pendiente", (PageRequest) pageable);
+            Pageable pageable = PageRequest.of(page, size);
+            solicitudes = solicitudeRepository.findRecentByStatus("pendiente", startDate, pageable);
         } else {
-            return null;
+            solicitudes = solicitudeRepository.findRecentByStatus("pendiente", startDate);
         }
+
+        // Convertir entidades a DTOs para manejar correctamente las fechas
+        return solicitudes.stream().map(this::convertToDTO).collect(Collectors.toList());
+    }
+
+    private SolicitudeDTO convertToDTO(Solicitude solicitude) {
+        SolicitudeDTO dto = new SolicitudeDTO();
+        dto.setId(solicitude.getId());
+        dto.setLoanAmount(solicitude.getLoanAmount());
+        dto.setStatus(solicitude.getStatus());
+
+        // Convertir Timestamp a OffsetDateTime
+        if (solicitude.getCreatedAt() != null) {
+            dto.setCreatedAt(solicitude.getCreatedAt().toLocalDateTime().atOffset(ZoneOffset.UTC));
+        }
+
+        // Mapear otras propiedades según sea necesario
+        dto.setBorrower(solicitude.getBorrower());
+
+        return dto;
     }
 
     // Helper method

@@ -152,6 +152,11 @@ public class JhiUserResolver {
         return loanRepository.findActiveLoansByBorrowerId(userId);
     }
 
+    @QueryMapping
+    public List<Loan> activeLoansByPartner(@Argument Long userId) {
+        return loanRepository.findActiveLoansByPartnerId(userId);
+    }
+
     // Helper method - sin procesar la contraseña
     private void mapUserInputToEntityWithoutPassword(JhiUserInput input, User user) {
         if (input.getName() != null) user.setName(input.getName());

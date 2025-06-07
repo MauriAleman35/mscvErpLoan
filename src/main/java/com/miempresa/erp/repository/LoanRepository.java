@@ -24,7 +24,7 @@ public interface LoanRepository extends JpaRepository<Loan, Long> {
     //<Loan> findByCurrentStatus(String currentStatus);
     // Para encontrar préstamos donde el usuario es el prestamista (partner)
     @Query("SELECT l FROM Loan l WHERE l.offer.partnerId = :partnerId AND l.currentStatus = 'al_dia'")
-    List<Loan> findActiveLoansByPartnerId(@Param("partnerId") Integer partnerId);
+    List<Loan> findActiveLoansByPartnerId(@Param("partnerId") long partnerId);
 
     List<Loan> findByLoanAmountBetween(BigDecimal minAmount, BigDecimal maxAmount);
 
@@ -47,4 +47,21 @@ public interface LoanRepository extends JpaRepository<Loan, Long> {
 
     // Método para encontrar por estado
     List<Loan> findByCurrentStatus(String status);
+
+    @Query(
+        value = "SELECT l.* FROM loan l " +
+        "JOIN offer o ON l.id_offer = o.id " +
+        "WHERE o.partner_id = :partnerId " +
+        "ORDER BY l.start_date DESC",
+        nativeQuery = true
+    )
+    List<Loan> findLoansByPartnerId(@Param("partnerId") Long partnerId);
+
+    // Consulta mejorada usando la relación directa
+    @Query("SELECT l FROM Loan l JOIN l.offer o WHERE o.partner.id = :partnerId ORDER BY l.startDate DESC")
+    List<Loan> findByPartnerIdOrderByStartDateDesc(@Param("partnerId") Long partnerId);
+
+    // Con filtro de estado
+    @Query("SELECT l FROM Loan l JOIN l.offer o WHERE o.partner.id = :partnerId AND l.currentStatus = :status ORDER BY l.startDate DESC")
+    List<Loan> findByPartnerIdAndStatusOrderByStartDateDesc(@Param("partnerId") Long partnerId, @Param("status") String status);
 }

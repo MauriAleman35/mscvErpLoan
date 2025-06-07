@@ -14,6 +14,7 @@ import java.util.List;
 import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.MutationMapping;
 import org.springframework.graphql.data.method.annotation.QueryMapping;
+import org.springframework.graphql.data.method.annotation.SchemaMapping;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -86,6 +87,9 @@ public class OfferResolver {
     @MutationMapping
     @Transactional
     public Offer createOffer(@Argument OfferInput input) {
+        User partner = userRepository
+            .findById(input.getPartnerId())
+            .orElseThrow(() -> new RuntimeException("Usuario prestamista no encontrado"));
         Solicitude solicitude = solicitudeRepository
             .findById(input.getSolicitudeId())
             .orElseThrow(() -> new RuntimeException("Solicitud no encontrada"));
@@ -116,10 +120,20 @@ public class OfferResolver {
         offer.setLoanTerm(input.getLoanTerm());
         offer.setSolicitude(solicitude);
         offer.setMonthlyPayment(monthlyPayment);
+        offer.setPartner(partner);
         offer.setTotalRepaymentAmount(totalRepayment);
         offer.setStatus("pendiente");
 
         return offerRepository.save(offer);
+    }
+
+    @SchemaMapping(typeName = "Offer", field = "createdAt")
+    public String createdAt(Offer offer) {
+        if (offer.getCreatedAt() == null) {
+            return null;
+        }
+        // Convertir java.sql.Timestamp a formato ISO-8601
+        return offer.getCreatedAt().toInstant().toString();
     }
 
     @MutationMapping
@@ -185,6 +199,7 @@ public class OfferResolver {
         solicitudeRepository.save(solicitude);
 
         // 7. Crear el préstamo (loan)
+        // 7. Crear el préstamo (loan)
         Loan loan = new Loan();
         loan.setOffer(offer);
         loan.setLoanAmount(solicitude.getLoanAmount());
@@ -192,14 +207,17 @@ public class OfferResolver {
         // Establecer fecha de inicio un mes después de la aceptación
         LocalDateTime acceptanceDate = LocalDateTime.now(ZoneId.systemDefault());
         LocalDateTime startLocalDateTime = acceptanceDate.plusMonths(1);
-        Instant startInstant = startLocalDateTime.atZone(ZoneId.systemDefault()).toInstant();
-        loan.setStartDate(startInstant);
+        // Convertir LocalDateTime a java.sql.Timestamp
+        java.sql.Timestamp startTimestamp = java.sql.Timestamp.valueOf(startLocalDateTime);
+        loan.setStartDate(startTimestamp);
 
         loan.setHashBlockchain("pendiente");
 
         // Calcular fecha final (startDate + loanTerm meses)
         LocalDateTime endLocalDateTime = startLocalDateTime.plusMonths(offer.getLoanTerm());
-        loan.setEndDate(endLocalDateTime.atZone(ZoneId.systemDefault()).toInstant());
+        // Convertir LocalDateTime a java.sql.Timestamp
+        java.sql.Timestamp endTimestamp = java.sql.Timestamp.valueOf(endLocalDateTime);
+        loan.setEndDate(endTimestamp);
 
         loan.setCurrentStatus("al_dia");
         loan.setLatePaymentCount(0);
@@ -211,7 +229,7 @@ public class OfferResolver {
         List<MonthlyPayment> payments = new ArrayList<>();
 
         // Usar LocalDateTime para manejar fechas con mayor precisión
-        LocalDateTime startDate = LocalDateTime.ofInstant(loan.getStartDate(), ZoneId.systemDefault());
+        LocalDateTime startDate = LocalDateTime.ofInstant(loan.getStartDate().toInstant(), ZoneId.systemDefault());
 
         // Dividir el monto total entre el número de cuotas
         BigDecimal paymentAmount = offer.getTotalRepaymentAmount().divide(BigDecimal.valueOf(offer.getLoanTerm()), 2, RoundingMode.HALF_UP);

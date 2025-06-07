@@ -2,11 +2,13 @@ package com.miempresa.erp.repository;
 
 import com.miempresa.erp.domain.Solicitude;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.*;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 /**
@@ -16,8 +18,15 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface SolicitudeRepository extends JpaRepository<Solicitude, Long> {
     // Métodos para filtrar solicitudes
-    List<Solicitude> findByStatus(String status, PageRequest pageRequest);
-    Page<Solicitude> findByStatus(String status, Pageable pageable);
+
+    // Método para buscar solicitudes recientes con paginación
+    @Query("SELECT s FROM Solicitude s WHERE s.status = :status AND s.createdAt >= :startDate ORDER BY s.createdAt DESC")
+    List<Solicitude> findRecentByStatus(@Param("status") String status, @Param("startDate") LocalDateTime startDate, Pageable pageable);
+
+    // Método para buscar solicitudes recientes sin paginación
+    @Query("SELECT s FROM Solicitude s WHERE s.status = :status AND s.createdAt >= :startDate ORDER BY s.createdAt DESC")
+    List<Solicitude> findRecentByStatus(@Param("status") String status, @Param("startDate") LocalDateTime startDate);
+
     List<Solicitude> findByBorrowerId(Long borrowerId);
 
     // Métodos para contar

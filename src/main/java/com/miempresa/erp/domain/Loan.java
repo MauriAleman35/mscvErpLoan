@@ -30,10 +30,10 @@ public class Loan implements Serializable {
     private BigDecimal loanAmount;
 
     @Column(name = "start_date", nullable = false)
-    private Instant startDate;
+    private java.sql.Timestamp startDate;
 
     @Column(name = "end_date", nullable = false)
-    private Instant endDate;
+    private java.sql.Timestamp endDate;
 
     @Column(name = "hash_blockchain", nullable = false)
     private String hashBlockchain;
@@ -80,29 +80,29 @@ public class Loan implements Serializable {
         this.loanAmount = loanAmount;
     }
 
-    public Instant getStartDate() {
+    public java.sql.Timestamp getStartDate() {
         return this.startDate;
     }
 
-    public Loan startDate(Instant startDate) {
+    public Loan startDate(java.sql.Timestamp startDate) {
         this.setStartDate(startDate);
         return this;
     }
 
-    public void setStartDate(Instant startDate) {
+    public void setStartDate(java.sql.Timestamp startDate) {
         this.startDate = startDate;
     }
 
-    public Instant getEndDate() {
+    public java.sql.Timestamp getEndDate() {
         return this.endDate;
     }
 
-    public Loan endDate(Instant endDate) {
+    public Loan endDate(java.sql.Timestamp endDate) {
         this.setEndDate(endDate);
         return this;
     }
 
-    public void setEndDate(Instant endDate) {
+    public void setEndDate(java.sql.Timestamp endDate) {
         this.endDate = endDate;
     }
 

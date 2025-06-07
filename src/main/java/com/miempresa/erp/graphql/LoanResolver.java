@@ -108,9 +108,32 @@ public class LoanResolver {
         return monthlyPaymentRepository.findByLoanIdOrderByDueDateAsc(loanId);
     }
 
+    @SchemaMapping(typeName = "Loan", field = "startDate")
+    public String startDate(Loan loan) {
+        if (loan.getStartDate() == null) {
+            return null;
+        }
+        // Convertir explícitamente a formato ISO con toInstant()
+        return loan.getStartDate().toInstant().toString();
+    }
+
+    @SchemaMapping(typeName = "Loan", field = "endDate")
+    public String endDate(Loan loan) {
+        if (loan.getEndDate() == null) {
+            return null;
+        }
+        // Convertir explícitamente a formato ISO con toInstant()
+        return loan.getEndDate().toInstant().toString();
+    }
+
     @QueryMapping
     public MonthlyPayment monthlyPayment(@Argument Long id) {
         return monthlyPaymentRepository.findById(id).orElseThrow(() -> new RuntimeException("Pago mensual no encontrado"));
+    }
+
+    @QueryMapping
+    public List<Loan> loansByPartnerId(@Argument Long partnerId) {
+        return loanRepository.findLoansByPartnerId(partnerId);
     }
 
     // Helper method
