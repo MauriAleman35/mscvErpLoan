@@ -17,6 +17,7 @@ import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -94,6 +95,7 @@ public class DocumentController {
     }
 
     //metodo para verificar identidad de Prestatario
+    @PreAuthorize("hasAuthority('ROLE_USER')")
     @PostMapping("/verify-identity")
     public ResponseEntity<Map<String, Object>> verifyIdentity(
         @RequestParam("documentImage") MultipartFile documentImage,
@@ -175,6 +177,7 @@ public class DocumentController {
         return ResponseEntity.ok(response);
     }
 
+    @PreAuthorize("hasAuthority('ROLE_USER')")
     @PostMapping("/verify-address")
     public ResponseEntity<Map<String, Object>> verifyAddress(
         @RequestParam("document") MultipartFile document,
@@ -225,6 +228,7 @@ public class DocumentController {
         }
     }
 
+    @PreAuthorize("hasAuthority('ROLE_USER')")
     @PostMapping("/pay-monthly-payment")
     @Transactional
     public ResponseEntity<?> payMonthlyPayment(@RequestParam("file") MultipartFile file, @RequestParam("paymentId") Long paymentId) {

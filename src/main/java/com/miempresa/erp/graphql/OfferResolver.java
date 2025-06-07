@@ -15,6 +15,7 @@ import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.MutationMapping;
 import org.springframework.graphql.data.method.annotation.QueryMapping;
 import org.springframework.graphql.data.method.annotation.SchemaMapping;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -84,6 +85,7 @@ public class OfferResolver {
     }
 
     // Mutations
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @MutationMapping
     @Transactional
     public Offer createOffer(@Argument OfferInput input) {
@@ -162,6 +164,7 @@ public class OfferResolver {
         }
     }
 
+    @PreAuthorize("hasAuthority('ROLE_USER')")
     @MutationMapping
     @Transactional
     public Loan acceptOffer(@Argument Long id) { // Añadida la anotación @Argument

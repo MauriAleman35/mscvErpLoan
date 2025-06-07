@@ -261,6 +261,7 @@ type Query {
   solicitude(id: ID!): Solicitude
   solicitudes(filter: SolicitudeFilter, page: Int, size: Int): [Solicitude]
   solicitudeCount(filter: SolicitudeFilter): Int
+  solicitudeByUser(id:ID!):[Solicitude]!
   # Para prestamistas: solicitudes disponibles para ofertar
   availableSolicitudes(page: Int, size: Int, daysBack:Int): [Solicitude]
   # JhiUser queries

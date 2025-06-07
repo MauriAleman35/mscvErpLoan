@@ -43,14 +43,36 @@ public class WebConfigurer implements ServletContextInitializer {
     @Bean
     public CorsFilter corsFilter() {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        CorsConfiguration config = jHipsterProperties.getCors();
-        if (!CollectionUtils.isEmpty(config.getAllowedOrigins()) || !CollectionUtils.isEmpty(config.getAllowedOriginPatterns())) {
-            LOG.debug("Registering CORS filter");
-            source.registerCorsConfiguration("/api/**", config);
-            source.registerCorsConfiguration("/management/**", config);
-            source.registerCorsConfiguration("/v3/api-docs", config);
-            source.registerCorsConfiguration("/swagger-ui/**", config);
-        }
+        CorsConfiguration config = new CorsConfiguration();
+
+        // Permitir todas las URLs
+        config.addAllowedOriginPattern("*");
+
+        // Permitir todos los métodos HTTP
+        config.addAllowedMethod("*");
+
+        // Permitir todas las cabeceras
+        config.addAllowedHeader("*");
+
+        // Exponer cabeceras necesarias
+        config.addExposedHeader("Authorization");
+        config.addExposedHeader("Link");
+        config.addExposedHeader("X-Total-Count");
+
+        // Permitir credenciales
+        config.setAllowCredentials(true);
+
+        // Tiempo máximo que el navegador puede cachear esta configuración
+        config.setMaxAge(1800L);
+
+        // Aplicar esta configuración a todas las rutas
+        source.registerCorsConfiguration("/**", config);
+        source.registerCorsConfiguration("/api/**", config);
+        source.registerCorsConfiguration("/management/**", config);
+        source.registerCorsConfiguration("/v3/api-docs", config);
+        source.registerCorsConfiguration("/swagger-ui/**", config);
+        source.registerCorsConfiguration("/graphql", config); // Añadir para GraphQL
+
         return new CorsFilter(source);
     }
 }

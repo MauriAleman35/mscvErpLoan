@@ -15,6 +15,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.MutationMapping;
 import org.springframework.graphql.data.method.annotation.QueryMapping;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 
@@ -137,6 +138,7 @@ public class JhiUserResolver {
     }
 
     // Para prestatarios: ver ofertas recibidas para una solicitud
+    @PreAuthorize("hasAuthority('ROLE_USER')")
     @QueryMapping
     public List<Offer> offersBySolicitude(@Argument Long solicitudeId, @Argument String status) {
         if (status != null && !status.isEmpty()) {
@@ -147,11 +149,13 @@ public class JhiUserResolver {
     }
 
     // Para ambos: ver préstamos activos
+    @PreAuthorize("hasAuthority('ROLE_USER')")
     @QueryMapping
     public List<Loan> activeLoansByUser(@Argument Long userId) {
         return loanRepository.findActiveLoansByBorrowerId(userId);
     }
 
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @QueryMapping
     public List<Loan> activeLoansByPartner(@Argument Long userId) {
         return loanRepository.findActiveLoansByPartnerId(userId);
