@@ -26,10 +26,16 @@ public class SecurityConfiguration {
 
     private final CorsFilter corsFilter;
     private final JwtAuthorizationFilter jwtAuthorizationFilter;
+    private final GraphQLSecurityFilter graphQLSecurityFilter;
 
-    public SecurityConfiguration(CorsFilter corsFilter, JwtAuthorizationFilter jwtAuthorizationFilter) {
+    public SecurityConfiguration(
+        CorsFilter corsFilter,
+        JwtAuthorizationFilter jwtAuthorizationFilter,
+        GraphQLSecurityFilter graphQLSecurityFilter
+    ) {
         this.corsFilter = corsFilter;
         this.jwtAuthorizationFilter = jwtAuthorizationFilter;
+        this.graphQLSecurityFilter = graphQLSecurityFilter;
     }
 
     @Bean
@@ -48,6 +54,7 @@ public class SecurityConfiguration {
             .csrf(csrf -> csrf.disable())
             .addFilterBefore(corsFilter, UsernamePasswordAuthenticationFilter.class)
             .addFilterBefore(jwtAuthorizationFilter, UsernamePasswordAuthenticationFilter.class)
+            .addFilterAfter(graphQLSecurityFilter, JwtAuthorizationFilter.class)
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(authz ->
                 authz

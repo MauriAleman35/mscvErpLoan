@@ -14,11 +14,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import org.checkerframework.checker.units.qual.A;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.MutationMapping;
 import org.springframework.graphql.data.method.annotation.QueryMapping;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 
 @Controller
@@ -37,7 +39,14 @@ public class SolicitudeResolver {
         this.eventPublisher = eventPublisher;
     }
 
+    @PreAuthorize("hasAuthority('ROLE_USER')")
+    @QueryMapping
+    public List<Solicitude> solicitudeByUser(@Argument Long id) {
+        return solicitudeRepository.findByBorrowerId(id);
+    }
+
     // Queries
+    @PreAuthorize("hasAuthority('ROLE_USER')")
     @QueryMapping
     public Solicitude solicitude(@Argument Long id) {
         return solicitudeRepository.findById(id).orElse(null);
@@ -80,6 +89,8 @@ public class SolicitudeResolver {
     }
 
     // Mutations
+
+    @PreAuthorize("hasAuthority('ROLE_USER')")
     @MutationMapping
     public Map<String, Object> createSolicitude(@Argument SolicitudeInput input) {
         User borrower = jhiUserRepository.findById(input.getBorrowerId()).orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
@@ -148,7 +159,7 @@ public class SolicitudeResolver {
      *
      *
      */
-
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @QueryMapping
     public List<SolicitudeDTO> availableSolicitudes(@Argument Integer page, @Argument Integer size, @Argument Integer daysBack) {
         // Definir fecha de inicio (por defecto 30 días si no se especifica)
