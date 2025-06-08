@@ -4,6 +4,7 @@ import com.miempresa.erp.domain.Loan;
 import com.miempresa.erp.domain.Offer;
 import com.miempresa.erp.domain.Solicitude;
 import com.miempresa.erp.domain.User;
+import com.miempresa.erp.event.EventPublisher;
 import com.miempresa.erp.graphql.JhiUserInput;
 import com.miempresa.erp.graphql.UserFilter;
 import com.miempresa.erp.repository.LoanRepository;
@@ -26,19 +27,22 @@ public class JhiUserResolver {
     private final SolicitudeRepository solicitudeRepository;
     private final OfferRepository offerRepository;
     private final LoanRepository loanRepository;
+    private final EventPublisher eventPublisher;
 
     public JhiUserResolver(
         UserRepository userRepository,
         PasswordEncoder passwordEncoder,
         SolicitudeRepository solicitudeRepository,
         OfferRepository offerRepository,
-        LoanRepository loanRepository
+        LoanRepository loanRepository,
+        EventPublisher eventPublisher
     ) {
         this.jhiUserRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.solicitudeRepository = solicitudeRepository;
         this.offerRepository = offerRepository;
         this.loanRepository = loanRepository;
+        this.eventPublisher = eventPublisher;
     }
 
     // Queries
@@ -87,7 +91,9 @@ public class JhiUserResolver {
             user.setPassword(passwordEncoder.encode(input.getPassword()));
         }
 
-        return jhiUserRepository.save(user);
+        User saved =  jhiUserRepository.save(user);
+        eventPublisher.publishChange("user", "insert", saved);
+        return saved;
     }
 
     @MutationMapping
@@ -102,13 +108,19 @@ public class JhiUserResolver {
             user.setPassword(passwordEncoder.encode(input.getPassword()));
         }
 
-        return jhiUserRepository.save(user);
+        User updated = jhiUserRepository.save(user);
+        eventPublisher.publishChange("user", "update", updated);
+        return updated;
     }
 
     @MutationMapping
     public Boolean deleteUser(@Argument Long id) {
         try {
+            User user = jhiUserRepository.findById(id).orElse(null);
+            if (user == null) return false;
+
             jhiUserRepository.deleteById(id);
+            eventPublisher.publishChange("user", "delete", user);
             return true;
         } catch (Exception e) {
             return false;
@@ -125,7 +137,9 @@ public class JhiUserResolver {
         User user = jhiUserRepository.findById(id).orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
         user.setIdentityVerified(verified);
-        return jhiUserRepository.save(user);
+        User updated = jhiUserRepository.save(user);
+        eventPublisher.publishChange("user", "update", updated);
+        return updated;
     }
 
     @MutationMapping
@@ -133,7 +147,9 @@ public class JhiUserResolver {
         User user = jhiUserRepository.findById(id).orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
         user.setAddressVerified(verified);
-        return jhiUserRepository.save(user);
+        User updated = jhiUserRepository.save(user);
+        eventPublisher.publishChange("user", "update", updated);
+        return updated;
     }
 
     // Para prestatarios: ver ofertas recibidas para una solicitud
