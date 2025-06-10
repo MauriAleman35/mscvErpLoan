@@ -1,6 +1,7 @@
 package com.miempresa.erp.repository;
 
 import com.miempresa.erp.domain.MonthlyPayment;
+import java.awt.print.Pageable;
 import java.time.Instant;
 import java.util.List;
 import org.springframework.data.jpa.repository.*;
@@ -53,6 +54,14 @@ public interface MonthlyPaymentRepository extends JpaRepository<MonthlyPayment, 
     Boolean existsByLoanIdAndPaymentStatusAndDueDateBefore(Long payment_id, String status, Instant due_date);
 
     List<MonthlyPayment> findByLoanIdAndPaymentStatusOrderByDueDateAsc(Long loanId, String status);
+
+    @Query(
+        "SELECT mp FROM MonthlyPayment mp " +
+        "JOIN mp.loan l JOIN l.offer o " +
+        "WHERE o.partnerId = :partnerId AND mp.partnerVerified = true " +
+        "ORDER BY mp.dueDate DESC"
+    )
+    List<MonthlyPayment> findVerifiedPaymentsByPartnerIdOrderByDueDateDesc(@Param("partnerId") String partnerId);
 
     @Query(
         "SELECT mp FROM MonthlyPayment mp " +

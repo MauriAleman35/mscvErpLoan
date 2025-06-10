@@ -11,6 +11,8 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.MutationMapping;
 import org.springframework.graphql.data.method.annotation.QueryMapping;
@@ -27,6 +29,8 @@ public class OfferResolver {
     private final LoanRepository loanRepository;
     private final UserRepository userRepository;
     private final MonthlyPaymentRepository monthlyPaymentRepository;
+    // Número de registros por defecto a devolver
+    private static final int DEFAULT_PAGE_SIZE = 20;
 
     public OfferResolver(
         OfferRepository offerRepository,
@@ -82,6 +86,20 @@ public class OfferResolver {
         }
 
         return offerRepository.findAll().size();
+    }
+
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    @QueryMapping
+    public List<MonthlyPayment> verifiedPaymentsByPartner(@Argument String partnerId) {
+        // Devolver todas las cuotas verificadas ordenadas por fecha de vencimiento descendente
+        return monthlyPaymentRepository.findVerifiedPaymentsByPartnerIdOrderByDueDateDesc(partnerId);
+    }
+
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    @QueryMapping
+    public List<Offer> offersByPartner(@Argument String partnerId) {
+        // Devolver todas las ofertas del prestamista ordenadas por fecha de creación descendente
+        return offerRepository.findByPartnerIdOrderByCreatedAtDesc(partnerId);
     }
 
     // Mutations

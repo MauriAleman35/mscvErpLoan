@@ -37,7 +37,8 @@ public class GraphQLSecurityFilter extends OncePerRequestFilter {
             "deleteUser", // Eliminar usuario
             "user", // Consulta usuario
             "users", // Listar usuarios
-            "userByEmail" // Buscar usuario por email
+            "userByEmail",
+            "createOffer" // Buscar usuario por email
         )
     );
 

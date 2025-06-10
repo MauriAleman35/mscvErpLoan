@@ -84,6 +84,8 @@ public class SecurityConfiguration {
                     .permitAll()
                     .requestMatchers(mvc.pattern("/graphiql/**"))
                     .permitAll()
+                    .requestMatchers(mvc.pattern(HttpMethod.GET, "/api/proxy-image"))
+                    .permitAll()
             );
 
         return http.build();

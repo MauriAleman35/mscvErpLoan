@@ -60,6 +60,20 @@ type JhiUser {
   solicitudes: [Solicitude]
   subscriptions: [UserSubscription]
 }
+type BorrowerStats {
+  adressVerified: Int
+  identityVerified: Int
+  loanCount: Int
+  latePaymentCount: Int
+  avgDaysLate: Float
+  totalPenalty: Float
+  paymentCompletionRatio: Float
+  hasNoLatePayments: Int
+  hasPenalty: Int
+  loansAlDiaRatio: Float
+  daysLatePerLoan: Float
+}
+
 type PendingSolicitude {
   id: ID!
   loanAmount: Float
@@ -189,7 +203,16 @@ input SubscriptionPlanInput {
   annualPrice: BigDecimal
   status: String
 }
-
+type OfferWithDetails {
+  id: ID!
+  interest: BigDecimal
+  loanTerm: Int
+  monthlyPayment: BigDecimal
+  totalRepaymentAmount: BigDecimal
+  status: String
+  createdAt: DateTime
+  solicitude: Solicitude
+}
 # Filtros para consultas
 input LoanFilter {
   id: ID
@@ -273,13 +296,17 @@ type Query {
   # Document queries
   document(id: ID!): Document
   documentsByUser(userId: ID!): [Document]
-
+  borrowerStatistics(borrowerId: ID!): BorrowerStats
   # MonthlyPayment queries
   monthlyPayment(id: ID!): MonthlyPayment
   monthlyPaymentsByLoan(loanId: ID!): [MonthlyPayment]
   paidMonthlyPaymentsByUser(userId: ID!): [PaymentDetail]
   paymentsToVerify(partnerId: ID!): [MonthlyPayment]
+  # Consulta simplificada para cuotas verificadas por el prestamista
+  verifiedPaymentsByPartner(partnerId: ID!): [MonthlyPayment]
 
+  # Consulta simplificada para ofertas enviadas por un prestamista
+  offersByPartner(partnerId: ID!): [OfferWithDetails]
   monthlyPaymentsByLoanAndStatus(loanId: ID!, status: String!): [MonthlyPayment]
   # UserSubscription queries
   userSubscription(id: ID!): UserSubscription

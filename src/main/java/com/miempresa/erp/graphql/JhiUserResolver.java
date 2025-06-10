@@ -4,6 +4,7 @@ import com.miempresa.erp.domain.Loan;
 import com.miempresa.erp.domain.Offer;
 import com.miempresa.erp.domain.Solicitude;
 import com.miempresa.erp.domain.User;
+import com.miempresa.erp.dto.BorrowerStats;
 import com.miempresa.erp.graphql.JhiUserInput;
 import com.miempresa.erp.graphql.UserFilter;
 import com.miempresa.erp.repository.LoanRepository;
@@ -11,6 +12,7 @@ import com.miempresa.erp.repository.OfferRepository;
 import com.miempresa.erp.repository.SolicitudeRepository;
 import com.miempresa.erp.repository.UserRepository;
 import java.util.List;
+import java.util.Map;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.MutationMapping;
@@ -27,19 +29,22 @@ public class JhiUserResolver {
     private final SolicitudeRepository solicitudeRepository;
     private final OfferRepository offerRepository;
     private final LoanRepository loanRepository;
+    private final UserRepository userRepository;
 
     public JhiUserResolver(
         UserRepository userRepository,
         PasswordEncoder passwordEncoder,
         SolicitudeRepository solicitudeRepository,
         OfferRepository offerRepository,
-        LoanRepository loanRepository
+        LoanRepository loanRepository,
+        UserRepository userRepository1
     ) {
         this.jhiUserRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.solicitudeRepository = solicitudeRepository;
         this.offerRepository = offerRepository;
         this.loanRepository = loanRepository;
+        this.userRepository = userRepository1;
     }
 
     // Queries
@@ -159,6 +164,12 @@ public class JhiUserResolver {
     @QueryMapping
     public List<Loan> activeLoansByPartner(@Argument Long userId) {
         return loanRepository.findActiveLoansByPartnerId(userId);
+    }
+
+    @PreAuthorize("hasAuthority('ROLE_USER')")
+    @QueryMapping
+    public Map<String, Object> borrowerStatistics(@Argument String borrowerId) {
+        return userRepository.getBorrowerStatistics(Long.valueOf(borrowerId));
     }
 
     // Helper method - sin procesar la contraseña

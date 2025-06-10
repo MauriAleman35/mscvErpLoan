@@ -2,9 +2,11 @@ package com.miempresa.erp.repository;
 
 import com.miempresa.erp.domain.Offer;
 import com.miempresa.erp.domain.Solicitude;
+import java.awt.print.Pageable;
 import java.math.BigDecimal;
 import java.util.List;
 import org.springframework.data.jpa.repository.*;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 /**
@@ -15,6 +17,15 @@ import org.springframework.stereotype.Repository;
 public interface OfferRepository extends JpaRepository<Offer, Long> {
     @Override
     List<Offer> findAll();
+
+    @Query(
+        "SELECT o FROM Offer o " +
+        "LEFT JOIN FETCH o.solicitude s " +
+        "LEFT JOIN FETCH s.borrower " +
+        "WHERE o.partnerId = :partnerId " +
+        "ORDER BY o.createdAt DESC"
+    )
+    List<Offer> findByPartnerIdOrderByCreatedAtDesc(@Param("partnerId") String partnerId);
 
     List<Offer> findBySolicitudeIdAndStatus(Long solicitudeId, String status);
     List<Offer> findByStatus(String status);
