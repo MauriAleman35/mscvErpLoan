@@ -46,7 +46,7 @@ public class WebConfigurer implements ServletContextInitializer {
         CorsConfiguration config = new CorsConfiguration();
 
         // Permitir todas las URLs
-        config.addAllowedOriginPattern("*");
+        config.addAllowedOriginPattern("http://frontend-loan.s3-website.us-east-2.amazonaws.com");
 
         // Permitir todos los métodos HTTP
         config.addAllowedMethod("*");

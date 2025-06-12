@@ -35,7 +35,7 @@ public class DocumentController {
     private final UserRepository userRepository;
     private final PinataService pinataService;
     private final MonthlyPaymentRepository monthlyPaymentRepository;
-    private final com.miempresa.erp.service.SimpleTextractService textractService;
+    private final com.miempresa.erp.services.SimpleTextractService textractService;
 
     public DocumentController(
         RekognitionService rekognitionService,
@@ -43,7 +43,7 @@ public class DocumentController {
         UserRepository userRepository,
         PinataService pinataService,
         MonthlyPaymentRepository monthlyPaymentRepository,
-        com.miempresa.erp.service.SimpleTextractService textractService
+        com.miempresa.erp.services.SimpleTextractService textractService
     ) {
         this.rekognitionService = rekognitionService;
         this.documentRepository = documentRepository;
@@ -113,12 +113,12 @@ public class DocumentController {
                 log.error("Usuario no encontrado con ID: {}", userId);
                 return ResponseEntity.badRequest().body(Map.of("error", "Usuario no encontrado"));
             }
-            if (findUser.get().getIdentityVerified() == true) {
+            if (findUser.get().getIdentityVerified()) {
                 log.info("Usuario ya verificado: {}", userId);
                 return ResponseEntity.ok(Map.of("message", "Usuario ya verificado"));
             }
             // 1. Verificar identidad con AWS Rekognition
-            RekognitionService.VerificationResult result = rekognitionService.verifyIdentity(documentImage, selfieImage);
+            var result = rekognitionService.verifyIdentity(documentImage, selfieImage, findUser.get());
 
             // 2. Si la verificación es exitosa, guardar imágenes y actualizar estado
             Map<String, Object> response = new HashMap<>();

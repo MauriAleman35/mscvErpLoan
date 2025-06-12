@@ -7,6 +7,7 @@ import com.amazonaws.regions.Regions;
 import com.amazonaws.services.rekognition.AmazonRekognition;
 import com.amazonaws.services.rekognition.AmazonRekognitionClientBuilder;
 import com.amazonaws.services.rekognition.model.*;
+import com.miempresa.erp.domain.User;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import org.slf4j.Logger;
@@ -38,7 +39,7 @@ public class RekognitionService {
      * Compara una imagen de documento con una selfie para verificar si es la misma persona
      * @return VerificationResult con resultado y porcentaje de similitud
      */
-    public VerificationResult verifyIdentity(MultipartFile documentImage, MultipartFile selfieImage) {
+    public VerificationResult verifyIdentity(MultipartFile documentImage, MultipartFile selfieImage, User user) {
         try {
             // Detectar cara en documento
             Image docImage = convertToAwsImage(documentImage);
@@ -49,6 +50,37 @@ public class RekognitionService {
             if (docFacesResult.getFaceDetails().isEmpty()) {
                 log.warn("No se detectó rostro en la imagen del documento");
                 return new VerificationResult(false, 0.0f, "No se detectó rostro en la imagen del documento");
+            }
+
+            // NUEVO: Detectar texto en la imagen del documento
+            DetectTextRequest textRequest = new DetectTextRequest().withImage(docImage);
+
+            DetectTextResult textResult = rekognitionClient.detectText(textRequest);
+
+            // Verificar si el CI del usuario está en el texto del carnet
+            boolean ciFound = false;
+            String userCI = user.getCi(); // Obtenemos el CI del usuario
+
+            log.info("Buscando CI '{}' en el texto del documento", userCI);
+
+            for (TextDetection textDetection : textResult.getTextDetections()) {
+                String detectedText = textDetection.getDetectedText();
+
+                // Eliminamos espacios y caracteres especiales para la comparación
+                String cleanedText = detectedText.replaceAll("[^0-9]", "");
+                String cleanedCI = userCI.replaceAll("[^0-9]", "");
+
+                // Verificamos si el texto contiene el CI
+                if (cleanedText.contains(cleanedCI)) {
+                    log.info("CI encontrado en el documento: '{}' contiene '{}'", detectedText, userCI);
+                    ciFound = true;
+                    break;
+                }
+            }
+
+            if (!ciFound) {
+                log.warn("El CI del usuario no coincide con la información del documento");
+                return new VerificationResult(false, 0.0f, "El CI no coincide con el documento");
             }
 
             // Detectar cara en selfie

@@ -1,4 +1,4 @@
-package com.miempresa.erp.service;
+package com.miempresa.erp.services;
 
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
