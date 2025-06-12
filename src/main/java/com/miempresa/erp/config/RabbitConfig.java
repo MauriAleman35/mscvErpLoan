@@ -13,24 +13,40 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class RabbitConfig {
 
-    @Value("${spring.rabbitmq.host:rabbitmq.rabbitmq-system.svc.cluster.local}")
-    private String host;
+    // @Value("${spring.rabbitmq.host:rabbitmq.rabbitmq-system.svc.cluster.local}")
+    // private String host;
 
-    @Value("${spring.rabbitmq.port:5672}")
-    private int port;
+    // @Value("${spring.rabbitmq.port:5672}")
+    // private int port;
 
-    @Value("${spring.rabbitmq.username:admin}")
-    private String username;
+    // @Value("${spring.rabbitmq.username:admin}")
+    // private String username;
 
-    @Value("${spring.rabbitmq.password:newpassword}")
-    private String password;
+    // @Value("${spring.rabbitmq.password:newpassword}")
+    // private String password;
 
-    @Value("${erp.rabbitmq.exchange:erp-exchange}")
-    private String exchange;
+    // @Value("${erp.rabbitmq.exchange:erp-exchange}")
+    // private String exchange;
 
     // Tablas a sincronizar del modelo proporcionado
+
+    @Value("${spring.rabbitmq.host:157.230.182.118}")
+    private String host;
+
+    @Value("${spring.rabbitmq.port:30673}")
+    private int port;
+
+    @Value("${spring.rabbitmq.username:user}")
+    private String username;
+
+    @Value("${spring.rabbitmq.password:password}")
+    private String password;
+
+     @Value("${erp.rabbitmq.exchange:erp-exchange}")
+     private String exchange;
+
     private final String[] SYNC_TABLES = {
-        "user", "solicitude", "offer", "loan", "monthly_payment"
+            "user", "solicitude", "offer", "loan", "monthly_payment"
     };
 
     @Bean

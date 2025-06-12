@@ -14,6 +14,8 @@ import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+
+import jakarta.persistence.EntityNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
@@ -105,12 +107,11 @@ public class DocumentController {
         log.info("Iniciando verificación de identidad para usuario ID: {}", userId);
 
         try {
-            Optional<User> findUser = userRepository.findById(userId);
-            if (findUser.isEmpty()) {
-                log.error("Usuario no encontrado con ID: {}", userId);
-                return ResponseEntity.badRequest().body(Map.of("error", "Usuario no encontrado"));
-            }
-            if (findUser.get().getIdentityVerified() == true) {
+
+            User findUser = userRepository.findById(userId).orElseThrow(() ->
+                new EntityNotFoundException("Usuario no encontrado con ID: " + userId));
+
+            if (findUser.getIdentityVerified()) {
                 log.info("Usuario ya verificado: {}", userId);
                 return ResponseEntity.ok(Map.of("message", "Usuario ya verificado"));
             }

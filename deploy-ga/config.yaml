@@ -1,0 +1,101 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: erp-config
+  namespace: bi-system
+data:
+  application.properties: |
+    # Perfil activo
+    spring.profiles.active=dev
+
+    # Nombre de la aplicación
+    spring.application.name=erp
+
+    # Conexión PostgreSQL
+    spring.datasource.type=com.zaxxer.hikari.HikariDataSource
+    spring.datasource.url=jdbc:postgresql://postgres:5432/bidatabase
+    spring.datasource.username=biuser
+    spring.datasource.password=Password123
+    spring.datasource.driver-class-name=org.postgresql.Driver
+
+    # JPA/Hibernate
+    spring.jpa.database-platform=org.hibernate.dialect.PostgreSQLDialect
+    spring.jpa.show-sql=true
+    spring.jpa.hibernate.ddl-auto=update
+
+    # Logging
+    logging.level.ROOT=INFO
+    logging.level.tech.jhipster=INFO
+    logging.level.org.hibernate.SQL=DEBUG
+    logging.level.com.miempresa.erp=DEBUG
+
+    # Deshabilitar Consul
+    spring.cloud.consul.config.enabled=false
+    spring.cloud.consul.discovery.enabled=false
+
+    # Deshabilitar Docker
+    spring.docker.compose.enabled=false
+
+    # Server
+    server.port=8001
+    server.forward-headers-strategy=native
+
+    # Management endpoints
+    management.endpoints.web.base-path=/management
+    management.endpoints.web.exposure.include=health,info,metrics,prometheus
+    spring.graphql.path=/graphql
+    spring.graphql.graphiql.enabled=true
+    spring.graphql.graphiql.path=/graphiql
+
+    # Propiedades específicas de JHipster
+    jhipster.clientApp.name=erp
+    jhipster.security.authentication.jwt.base64-secret=YTQyZmQ5NGYxMWM4NzEyNjRhNTM4YmY5NzBjZDcyYzRiMmMzODBmY2ZiOGJmOTVkNzRmYzE1MTI0NGU1OGFkZTBkODVjMjFiNTlmOWRkMDc1YzM3MjgzODZiN2I5MzVlYTZiNzgyZGZlYTFiNDNhZDIzZjllZmVhMjdmYTUxZGI=
+    jhipster.security.authentication.jwt.token-validity-in-seconds=86400
+    jhipster.security.authentication.jwt.token-validity-in-seconds-for-remember-me=2592000
+    jhipster.cors.allowed-origins=*
+    jhipster.cors.allowed-methods=*
+    jhipster.cors.allowed-headers=*
+    jhipster.cors.exposed-headers=Authorization,Link,X-Total-Count
+    jhipster.cors.allow-credentials=true
+    jhipster.cors.max-age=1800
+    jhipster.cache.hazelcast.time-to-live-seconds=3600
+    jhipster.cache.hazelcast.backup-count=1
+
+    # AWS
+    aws.access.key.id=AKIAVRUVUDSHFNHQBQYY
+    aws.secret.access.key=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
+    aws.region=us-east-1
+
+    # AWS Textract
+    aws.access.key.id.textract=AKIAVRUVUDSHNFA6NJ42
+    aws.secret.access.key.textract=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
+
+    # Pinata
+    pinata.api.key=50b5ccf547f374380aa4
+    pinata.api.secret=f528f0ebb7b2a363cdce7f88d42557bc237b92ed93d139df57a86942c896bd9e
+    pinata.api.jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySW5mb3JtYXRpb24iOnsiaWQiOiIzNGNjOGNiZC1kZTExLTRlYjYtYjk4Zi0yNzE2YWFhMTdjMTUiLCJlbWFpbCI6Im1hdXJpY2lvLmFsZW1hbi4zNTI0QGdtYWlsLmNvbSIsImVtYWlsX3ZlcmlmaWVkIjp0cnVlLCJwaW5fcG9saWN5Ijp7InJlZ2lvbnMiOlt7ImRlc2lyZWRSZXBsaWNhdGlvbkNvdW50IjoxLCJpZCI6IkZSQTEifSx7ImRlc2lyZWRSZXBsaWNhdGlvbkNvdW50IjoxLCJpZCI6Ik5ZQzEifV0sInZlcnNpb24iOjF9LCJtZmFfZW5hYmxlZCI6ZmFsc2UsInN0YXR1cyI6IkFDVElWRSJ9LCJhdXRoZW50aWNhdGlvblR5cGUiOiJzY29wZWRLZXkiLCJzY29wZWRLZXlLZXkiOiI1MGI1Y2NmNTQ3ZjM3NDM4MGFhNCIsInNjb3BlZEtleVNlY3JldCI6ImY1MjhmMGViYjdiMmEzNjNjZGNlN2Y4OGQ0MjU1N2JjMjM3YjkyZWQ5M2QxMzlkZjU3YTg2OTQyYzg5NmJkOWUiLCJleHAiOjE3ODA2MzYzMjR9.WWyxPmhzoZHM2xL0oVflHH02FC02ANLzoNR3NS0hMMg
+
+    # Ajustes multipart
+    spring.servlet.multipart.max-file-size=5MB
+    spring.servlet.multipart.max-request-size=10MB
+
+    # RabbitMQ (deshabilitado)
+    spring.rabbitmq.enabled=true
+
+    # RabbitMQ
+    spring.rabbitmq.host=157.230.182.118
+    spring.rabbitmq.port=30673
+    spring.rabbitmq.username=user
+    spring.rabbitmq.password=password
+    spring.rabbitmq.virtual-host=/
+
+    # Exchange para eventos de cambios de datos
+    erp.rabbitmq.exchange=erp-exchange
+
+
+
+    logging.level.org.springframework.amqp=DEBUG
+    logging.level.com.rabbitmq=DEBUG
+
+    # Desactivar Liquibase
+    spring.liquibase.enabled=false

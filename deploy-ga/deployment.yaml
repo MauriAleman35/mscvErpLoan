@@ -1,0 +1,124 @@
+# apiVersion: apps/v1
+# kind: Deployment
+# metadata:
+#   name: erp-microservice
+#   namespace: bi-system
+# spec:
+#   replicas: 1
+#   selector:
+#     matchLabels:
+#       app: erp-microservice
+#   template:
+#     metadata:
+#       labels:
+#         app: erp-microservice
+#     spec:
+#       containers:
+#       - name: erp-microservice
+#         image: moisodev/msserp:latest  # Reemplaza con tu imagen
+#         ports:
+#         - containerPort: 8000
+#         volumeMounts:
+#         - name: config-volume
+#           mountPath: /app/config
+#         env:
+#         - name: SPRING_CONFIG_LOCATION
+#           value: file:/app/config/application.properties
+#         resources:
+#           requests:
+#             memory: "256Mi"
+#             cpu: "200m"
+#           limits:
+#             memory: "512Mi"
+#             cpu: "500m"
+#       volumes:
+#       - name: config-volume
+#         configMap:
+#           name: erp-config
+# ---
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: erp-service
+#   namespace: bi-system
+# spec:
+#   selector:
+#     app: erp-microservice
+#   ports:
+#   - port: 8000
+#     targetPort: 8000
+#   type: ClusterIP
+
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: erp-microservice
+  namespace: bi-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: erp-microservice
+  template:
+    metadata:
+      labels:
+        app: erp-microservice
+    spec:
+      containers:
+      - name: erp-microservice
+        image: moisodev/msserp:latest
+        ports:
+        - containerPort: 8001
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: dev
+        - name: SPRING_LIQUIBASE_ENABLED
+          value: "false"
+        - name: LIQUIBASE_ENABLED
+          value: "false"
+        - name: SPRING_JPA_HIBERNATE_DDL_AUTO
+          value: update
+        - name: SPRING_RABBITMQ_ENABLED
+          value: "false"
+        - name: SPRING_CONFIG_LOCATION
+          value: file:/app/config/application.properties
+        - name: RABBITMQ_HOST
+          value: rabbitmq
+        - name: RABBITMQ_PORT
+          value: "5672"
+        - name: RABBITMQ_USERNAME
+          value: admin
+        - name: RABBITMQ_PASSWORD
+          value: newpassword
+        envFrom:
+        - secretRef:
+            name: erp-secrets
+        resources:
+          limits:
+            cpu: 150m
+            memory: 512Mi
+          requests:
+            cpu: 80m
+            memory: 256Mi
+        volumeMounts:
+        - mountPath: /app/config
+          name: config-volume
+      volumes:
+      - configMap:
+          name: erp-config
+        name: config-volume
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: erp-service
+  namespace: bi-system
+spec:
+  selector:
+    app: erp-microservice
+  ports:
+  - port: 8001
+    targetPort: 8001
+  type: ClusterIP
