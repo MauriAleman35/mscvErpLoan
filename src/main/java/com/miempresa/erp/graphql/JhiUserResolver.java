@@ -5,6 +5,7 @@ import com.miempresa.erp.domain.Offer;
 import com.miempresa.erp.domain.Solicitude;
 import com.miempresa.erp.domain.User;
 import com.miempresa.erp.dto.BorrowerStats;
+import com.miempresa.erp.event.EventPublisher;
 import com.miempresa.erp.graphql.JhiUserInput;
 import com.miempresa.erp.graphql.UserFilter;
 import com.miempresa.erp.repository.LoanRepository;
@@ -12,7 +13,6 @@ import com.miempresa.erp.repository.OfferRepository;
 import com.miempresa.erp.repository.SolicitudeRepository;
 import com.miempresa.erp.repository.UserRepository;
 import java.util.List;
-import java.util.Map;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.MutationMapping;
@@ -29,7 +29,7 @@ public class JhiUserResolver {
     private final SolicitudeRepository solicitudeRepository;
     private final OfferRepository offerRepository;
     private final LoanRepository loanRepository;
-    private final UserRepository userRepository;
+    private final EventPublisher eventPublisher;
 
     public JhiUserResolver(
         UserRepository userRepository,
@@ -37,14 +37,14 @@ public class JhiUserResolver {
         SolicitudeRepository solicitudeRepository,
         OfferRepository offerRepository,
         LoanRepository loanRepository,
-        UserRepository userRepository1
+        EventPublisher eventPublisher
     ) {
         this.jhiUserRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.solicitudeRepository = solicitudeRepository;
         this.offerRepository = offerRepository;
         this.loanRepository = loanRepository;
-        this.userRepository = userRepository1;
+        this.eventPublisher = eventPublisher;
     }
 
     // Queries
@@ -93,7 +93,9 @@ public class JhiUserResolver {
             user.setPassword(passwordEncoder.encode(input.getPassword()));
         }
 
-        return jhiUserRepository.save(user);
+        User saved = jhiUserRepository.save(user);
+        eventPublisher.publishChange("user", "insert", saved);
+        return saved;
     }
 
     @MutationMapping
@@ -108,13 +110,19 @@ public class JhiUserResolver {
             user.setPassword(passwordEncoder.encode(input.getPassword()));
         }
 
-        return jhiUserRepository.save(user);
+        User updated = jhiUserRepository.save(user);
+        eventPublisher.publishChange("user", "update", updated);
+        return updated;
     }
 
     @MutationMapping
     public Boolean deleteUser(@Argument Long id) {
         try {
+            User user = jhiUserRepository.findById(id).orElse(null);
+            if (user == null) return false;
+
             jhiUserRepository.deleteById(id);
+            eventPublisher.publishChange("user", "delete", user);
             return true;
         } catch (Exception e) {
             return false;
@@ -131,7 +139,9 @@ public class JhiUserResolver {
         User user = jhiUserRepository.findById(id).orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
         user.setIdentityVerified(verified);
-        return jhiUserRepository.save(user);
+        User updated = jhiUserRepository.save(user);
+        eventPublisher.publishChange("user", "update", updated);
+        return updated;
     }
 
     @MutationMapping
@@ -139,7 +149,9 @@ public class JhiUserResolver {
         User user = jhiUserRepository.findById(id).orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
         user.setAddressVerified(verified);
-        return jhiUserRepository.save(user);
+        User updated = jhiUserRepository.save(user);
+        eventPublisher.publishChange("user", "update", updated);
+        return updated;
     }
 
     // Para prestatarios: ver ofertas recibidas para una solicitud
@@ -164,12 +176,6 @@ public class JhiUserResolver {
     @QueryMapping
     public List<Loan> activeLoansByPartner(@Argument Long userId) {
         return loanRepository.findActiveLoansByPartnerId(userId);
-    }
-
-    @PreAuthorize("hasAuthority('ROLE_USER')")
-    @QueryMapping
-    public Map<String, Object> borrowerStatistics(@Argument String borrowerId) {
-        return userRepository.getBorrowerStatistics(Long.valueOf(borrowerId));
     }
 
     // Helper method - sin procesar la contraseña

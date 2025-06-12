@@ -8,6 +8,7 @@ import com.miempresa.erp.repository.MonthlyPaymentRepository;
 import com.miempresa.erp.repository.UserRepository;
 import com.miempresa.erp.services.PinataService;
 import com.miempresa.erp.services.RekognitionService;
+import jakarta.persistence.EntityNotFoundException;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -16,13 +17,10 @@ import java.util.Map;
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
 @RestController
@@ -108,17 +106,16 @@ public class DocumentController {
         log.info("Iniciando verificación de identidad para usuario ID: {}", userId);
 
         try {
-            Optional<User> findUser = userRepository.findById(userId);
-            if (findUser.isEmpty()) {
-                log.error("Usuario no encontrado con ID: {}", userId);
-                return ResponseEntity.badRequest().body(Map.of("error", "Usuario no encontrado"));
-            }
-            if (findUser.get().getIdentityVerified()) {
+            User findUser = userRepository
+                .findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado con ID: " + userId));
+
+            if (findUser.getIdentityVerified()) {
                 log.info("Usuario ya verificado: {}", userId);
                 return ResponseEntity.ok(Map.of("message", "Usuario ya verificado"));
             }
             // 1. Verificar identidad con AWS Rekognition
-            var result = rekognitionService.verifyIdentity(documentImage, selfieImage, findUser.get());
+            RekognitionService.VerificationResult result = rekognitionService.verifyIdentity(documentImage, selfieImage, findUser);
 
             // 2. Si la verificación es exitosa, guardar imágenes y actualizar estado
             Map<String, Object> response = new HashMap<>();

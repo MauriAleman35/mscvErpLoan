@@ -3,6 +3,7 @@ package com.miempresa.erp.graphql;
 import com.miempresa.erp.domain.Solicitude;
 import com.miempresa.erp.domain.User;
 import com.miempresa.erp.dto.SolicitudeDTO;
+import com.miempresa.erp.event.EventPublisher;
 import com.miempresa.erp.repository.SolicitudeRepository;
 import com.miempresa.erp.repository.UserRepository;
 import java.time.Instant;
@@ -27,10 +28,12 @@ public class SolicitudeResolver {
 
     private final SolicitudeRepository solicitudeRepository;
     private final UserRepository jhiUserRepository;
+    private final EventPublisher eventPublisher;
 
-    public SolicitudeResolver(SolicitudeRepository solicitudeRepository, UserRepository jhiUserRepository) {
+    public SolicitudeResolver(SolicitudeRepository solicitudeRepository, UserRepository jhiUserRepository, EventPublisher eventPublisher) {
         this.solicitudeRepository = solicitudeRepository;
         this.jhiUserRepository = jhiUserRepository;
+        this.eventPublisher = eventPublisher;
     }
 
     @PreAuthorize("hasAuthority('ROLE_USER')")
@@ -96,6 +99,9 @@ public class SolicitudeResolver {
 
         Solicitude savedSolicitude = solicitudeRepository.save(solicitude);
 
+        // Publicar evento de creación
+        eventPublisher.publishChange("solicitude", "insert", savedSolicitude);
+
         // Crear un mapa para evitar problemas de serialización
         Map<String, Object> result = new HashMap<>();
         result.put("id", savedSolicitude.getId().toString());
@@ -119,13 +125,26 @@ public class SolicitudeResolver {
             solicitude.setBorrower(borrower);
         }
 
-        return solicitudeRepository.save(solicitude);
+        Solicitude updated = solicitudeRepository.save(solicitude);
+
+        // Publicar evento de actualización
+        eventPublisher.publishChange("solicitude", "update", updated);
+
+        return updated;
     }
 
     @MutationMapping
     public Boolean deleteSolicitude(@Argument Long id) {
         try {
+            // Obtener la entidad antes de eliminarla para el evento
+            Solicitude solicitude = solicitudeRepository.findById(id).orElse(null);
+            if (solicitude == null) return false;
+
             solicitudeRepository.deleteById(id);
+
+            // Publicar evento de eliminación
+            eventPublisher.publishChange("solicitude", "delete", solicitude);
+
             return true;
         } catch (Exception e) {
             return false;

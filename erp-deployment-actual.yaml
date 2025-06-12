@@ -1,0 +1,109 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    deployment.kubernetes.io/revision: "8"
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"apps/v1","kind":"Deployment","metadata":{"annotations":{},"name":"erp-microservice","namespace":"bi-system"},"spec":{"replicas":2,"selector":{"matchLabels":{"app":"erp-microservice"}},"template":{"metadata":{"labels":{"app":"erp-microservice"}},"spec":{"containers":[{"env":[{"name":"SPRING_CONFIG_LOCATION","value":"file:/app/config/application.properties"},{"name":"RABBITMQ_HOST","value":"rabbitmq"},{"name":"RABBITMQ_PORT","value":"5672"},{"name":"RABBITMQ_USERNAME","value":"admin"},{"name":"RABBITMQ_PASSWORD","value":"newpassword"}],"envFrom":[{"secretRef":{"name":"erp-secrets"}}],"image":"moisodev/msserp:latest","name":"erp-microservice","ports":[{"containerPort":8081}],"resources":{"limits":{"cpu":"512m","memory":"512Mi"},"requests":{"cpu":"250m","memory":"512Mi"}},"volumeMounts":[{"mountPath":"/app/config","name":"erp-config-volume"}]}],"volumes":[{"configMap":{"name":"erp-config"},"name":"erp-config-volume"}]}}}}
+  creationTimestamp: "2025-06-11T00:42:13Z"
+  generation: 9
+  name: erp-microservice
+  namespace: bi-system
+  resourceVersion: "364929"
+  uid: bce120ed-90a2-401f-a360-0545afcff3b7
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: erp-microservice
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      annotations:
+        kubectl.kubernetes.io/restartedAt: "2025-06-11T01:27:51-04:00"
+      creationTimestamp: null
+      labels:
+        app: erp-microservice
+    spec:
+      containers:
+      - env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: dev
+        - name: SPRING_LIQUIBASE_ENABLED
+          value: "false"
+        - name: LIQUIBASE_ENABLED
+          value: "false"
+        - name: SPRING_JPA_HIBERNATE_DDL_AUTO
+          value: update
+        - name: SPRING_RABBITMQ_ENABLED
+          value: "false"
+        - name: SPRING_CONFIG_LOCATION
+          value: file:/app/config/application.properties
+        - name: RABBITMQ_HOST
+          value: rabbitmq
+        - name: RABBITMQ_PORT
+          value: "5672"
+        - name: RABBITMQ_USERNAME
+          value: admin
+        - name: RABBITMQ_PASSWORD
+          value: newpassword
+        envFrom:
+        - secretRef:
+            name: erp-secrets
+        image: moisodev/msserp:latest
+        imagePullPolicy: Always
+        name: erp-microservice
+        ports:
+        - containerPort: 8081
+          protocol: TCP
+        resources:
+          limits:
+            cpu: 150m
+            memory: 512Mi
+          requests:
+            cpu: 80m
+            memory: 256Mi
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /app/config
+          name: config-volume
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - configMap:
+          defaultMode: 420
+          name: erp-config
+        name: config-volume
+      - configMap:
+          defaultMode: 420
+          name: erp-config
+        name: erp-config-volume
+status:
+  availableReplicas: 1
+  conditions:
+  - lastTransitionTime: "2025-06-11T04:59:02Z"
+    lastUpdateTime: "2025-06-11T04:59:02Z"
+    message: Deployment has minimum availability.
+    reason: MinimumReplicasAvailable
+    status: "True"
+    type: Available
+  - lastTransitionTime: "2025-06-11T03:48:27Z"
+    lastUpdateTime: "2025-06-11T05:27:54Z"
+    message: ReplicaSet "erp-microservice-6dc55bd959" has successfully progressed.
+    reason: NewReplicaSetAvailable
+    status: "True"
+    type: Progressing
+  observedGeneration: 9
+  readyReplicas: 1
+  replicas: 1
+  updatedReplicas: 1
