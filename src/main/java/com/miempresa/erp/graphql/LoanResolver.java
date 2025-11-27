@@ -104,6 +104,7 @@ public class LoanResolver {
         }
     }
 
+    //ver de migrarlo a microservicio loan
     @PreAuthorize("hasAuthority('ROLE_USER')")
     @QueryMapping
     public List<MonthlyPayment> monthlyPaymentsByLoan(@Argument Long loanId) {

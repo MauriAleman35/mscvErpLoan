@@ -8,12 +8,12 @@ import org.springframework.data.jpa.repository.*;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-/**
- * Spring Data JPA repository for the MonthlyPayment entity.
- */
-@SuppressWarnings("unused")
 @Repository
 public interface MonthlyPaymentRepository extends JpaRepository<MonthlyPayment, Long> {
+    /**
+     * Spring Data JPA repository for the MonthlyPayment entity.
+     */
+    @SuppressWarnings("unused")
     List<MonthlyPayment> findByLoanId(Long loanId);
 
     List<MonthlyPayment> findByDueDateBefore(Instant date);

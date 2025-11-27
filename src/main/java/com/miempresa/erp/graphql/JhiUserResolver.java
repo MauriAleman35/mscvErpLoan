@@ -1,5 +1,6 @@
 package com.miempresa.erp.graphql;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.miempresa.erp.domain.Loan;
 import com.miempresa.erp.domain.Offer;
 import com.miempresa.erp.domain.Solicitude;
@@ -13,6 +14,7 @@ import com.miempresa.erp.repository.OfferRepository;
 import com.miempresa.erp.repository.SolicitudeRepository;
 import com.miempresa.erp.repository.UserRepository;
 import java.util.List;
+import java.util.Map;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.MutationMapping;
@@ -30,6 +32,7 @@ public class JhiUserResolver {
     private final OfferRepository offerRepository;
     private final LoanRepository loanRepository;
     private final EventPublisher eventPublisher;
+    private final ObjectMapper objectMapper;
 
     public JhiUserResolver(
         UserRepository userRepository,
@@ -37,7 +40,8 @@ public class JhiUserResolver {
         SolicitudeRepository solicitudeRepository,
         OfferRepository offerRepository,
         LoanRepository loanRepository,
-        EventPublisher eventPublisher
+        EventPublisher eventPublisher,
+        ObjectMapper objectMapper
     ) {
         this.jhiUserRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
@@ -45,6 +49,7 @@ public class JhiUserResolver {
         this.offerRepository = offerRepository;
         this.loanRepository = loanRepository;
         this.eventPublisher = eventPublisher;
+        this.objectMapper = objectMapper;
     }
 
     // Queries
@@ -96,6 +101,14 @@ public class JhiUserResolver {
         User saved = jhiUserRepository.save(user);
         eventPublisher.publishChange("user", "insert", saved);
         return saved;
+    }
+
+    @PreAuthorize("hasAuthority('ROLE_USER')")
+    @QueryMapping
+    public BorrowerStats borrowerStatistics(@Argument Long borrowerId) {
+        User user = jhiUserRepository.findById(borrowerId).orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+        Map<String, Object> statsMap = jhiUserRepository.getBorrowerStatistics(borrowerId);
+        return objectMapper.convertValue(statsMap, BorrowerStats.class);
     }
 
     @MutationMapping
